@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+
+<title>A popup</title>
+<script>
+var targetOrigin = 'http://iframe.prodemand.com';
+
+// document.domain = "prototypes.prodemand.com";
+
+function callParentProxy(){
+  //alert('About to call my opener\'s proxy function to postMessage to the subframe');
+  try {
+    window.opener.postMessagePassthrough("Message from popup! " + new Date());
+  }
+  catch(e) {
+    alert('callParentProxy exception: ' + e.message);
+  }
+}
+
+function callParentProxyStackBust(){
+  //alert('About to call my opener\'s stack-busting proxy function to postMessage to the subframe.');
+  try {
+    window.opener.stackbustPostMessagePassthrough("QueuedMessage from popup! " + new Date());
+  }
+  catch(e) {
+    alert('callParentProxyStackBust exception: ' + e.message);
+  }
+}
+
+function callParentDirect() {
+  try {
+      window.opener.frames[0].postMessage("Message from popup- " + new Date(), targetOrigin);
+  }
+  catch(e) {
+    alert('callParentDirect exception: ' + e.message);
+  }
+}
+
+
+</script>
+</head>
+
+<body bgcolor="lime">Popup<br>
+<button onclick="callParentProxy()">Call opener's proxy-function to postMessage</button><br>
+<button onclick="callParentProxyStackBust()">Call opener's stack-bust-proxy-function to postMessage</button><br>
+<button onclick="callParentDirect()">Call postMessage directly</button><br>
+<br><br>
+<script>
+document.write("window.opener: " + window.opener); if (window.opener == window) document.write(" <B>SELF</B>"); document.write( "<br />");
+document.write("window.parent: " + window.parent); if (window.parent == window) document.write(" <B>SELF</B>"); document.write( "<br />");
+document.write("window.opener.parent: " + window.opener.parent + "<br />");
+document.write("Document Domain: " + document.domain + "<BR>");
+</script>
+
+</body></html>

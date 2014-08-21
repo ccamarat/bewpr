@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<!-- saved from url=(0044)http://bayden.com/test/xdm/origin/target.asp -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+
+<title>Message Catcher</title>
+<script>
+
+var targetOrigin = 'http://iframe.prodemand.com';
+
+function trySend(){
+	try{
+		postMessage("This is a self-sent message - " + new Date(), targetOrigin);  
+		//alert("Message Sent to Target");
+	}
+	catch(e){
+		alert("Self-sent Message Failed. " + e.message);
+	}
+}
+
+
+if (document.addEventListener){
+  window.addEventListener("message", function(e) {
+    //alert( e.data);
+    var oDiv = document.getElementById('divMsgs');
+    oDiv.textContent = (oDiv.textContent + e.origin + " says: " + e.data + "\r\n");
+  }, false);
+}
+else {
+  window.attachEvent('onmessage', function(e) {
+    var oDiv = document.getElementById('divMsgs');
+    oDiv.innerHTML = oDiv.innerHTML + window.toStaticHTML("<b>"+e.origin+" says:</b> "+e.data+"<br/>");
+  });
+}
+
+if (window.opener ){
+	try{
+		// alert("I will alert my parent that I exist.");
+		window.opener.postMessage("hello from child.", "*");
+		// alert("sent message to parent");
+	}
+	catch(e){
+		alert("Message Failed.\n" + e.description);
+	}
+}
+else {
+	// alert("window.opener == null.");
+}
+
+if (window.documentMode) { document.write("Doc Mode: " + document.documentMode + "<BR>");}
+document.write("Document Domain: " + document.domain + "<BR>");
+</script>
+</head>
+
+<body bgcolor="gray">
+This page collects XDM messages.<br>
+
+<div style="background-color:#66FF66" id="divMsgs"></div>
+
+<button onclick="trySend();">Send Message to self</button><br>
+
+
+
+
+</body></html>

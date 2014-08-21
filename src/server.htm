@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Server</title>
+</head>
+
+<body>
+    <h1>Server</h1>
+    <button onclick="sendMessage();">Send postMessage</button><br />
+
+    <div id="divMsgs"></div>
+
+    <script>
+        var parent = window.opener || window.top,
+            oDiv = document.getElementById('divMsgs');
+
+        // Senders
+
+        // *** postMessage ***
+        function sendMessage(s) {
+            var msg = s || "Source: <b>Server</b>. Domain: " + document.domain + ". <b>Via</b>: postMessage";
+            parent.postMessage(msg, '*');
+        }
+
+        // Receivers
+
+        // *** postMessage ***
+        function logMessage(e) {
+            oDiv.innerHTML += "<b>" + e.origin + " says:</b> " + e.data + "<br/>";
+        }
+        if (document.addEventListener) {
+            window.addEventListener("message", logMessage, false);
+        }
+        else if (window.attachEvent) {
+            window.attachEvent('onmessage', logMessage);
+        }
+    </script>
+</body>
+
+</html>

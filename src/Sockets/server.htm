@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Server</title>
+</head>
+
+<body>
+    <h1>Server</h1>
+    <button onclick='sendMessage();'>Send postMessage</button><br />
+
+    <div id='divMsgs'></div>
+
+    <script src="json3.js"></script>
+    <script src='transport.js'></script>
+    <script>
+        var oDiv = document.getElementById('divMsgs'),
+            server = window.PMT.Channel.getServer();
+        server.onMessage = function(message) {
+            oDiv.innerHTML += message + '<br/>';
+        };
+        function sendMessage() {
+            server.send('Source: <b>Server</b>. Domain: ' + document.domain + '. <b>Via</b>: ' + server._peerId);
+        }
+    </script>
+</body>
+
+</html>
