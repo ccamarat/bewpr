@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Server</title>
+</head>
+
+<body>
+    <h1>Server</h1>
+    <button onclick="sendPostMessage();">Send postMessage to Parent</button><br>
+    <button onclick="sendPostMessageStackbust();">Send sendPostMessageStackbust to Parent</button><br>
+    <button onclick="sendPostMessagePassthrough();">Send postMessagePassthrough to Parent</button><br>
+    <!-- <button onclick="sendPostMessagePassthroughStackbust();">Send postMessagePassthroughStackbust to Parent</button><br> -->
+
+    <div id="divMsgs"></div>
+</body>
+
+<script>
+    var oDiv = document.getElementById('divMsgs');
+    function logMessage(e) {        
+        oDiv.innerHTML += "<b>" + e.origin + " says:</b> " + e.data + "<br/>";
+    }
+
+    // Senders
+
+    // *** postMessage ***
+    function sendPostMessage(s) {
+        window.top.postMessage(s || "Source: <b>Server</b>. Domain: " + document.domain + ". <b>Via</b>: postMessage", "*");
+    }
+
+    // *** postMessageStackbust ***
+    function sendPostMessageStackbust() {
+        var msg = "Source: <b>Server</b>. Domain: " + document.domain + ". <b>Via</b>: postMessageStackbust";
+        setTimeout('sendPostMessage("' + msg + '")', 0);
+    }
+
+    // *** postMessagePassthrough ***
+    function sendPostMessagePassthrough() {
+        window.top.postMessagePassthrough("Source: <b>Server</b>. Domain: " + document.domain + ". <b>Via</b>: postMessagePassthrough", "*");
+    }
+
+    // *** postMessagePassthroughStackbust ***
+    function sendPostMessagePassthroughStackbust() {
+        window.top.postMessagePassthroughStackbust("Source: <b>Server</b>. Domain: " + document.domain + ". <b>Via</b>: postMessagePassthroughStackbust", "*");
+    }
+
+    // Receivers
+
+    // *** postMessage ***
+    if (document.addEventListener) {
+        window.addEventListener("message", logMessage, false);
+    }
+    else if (window.attachEvent) {
+        window.attachEvent('onmessage', logMessage);
+    }
+
+    // *** postMessagePassthrough ***
+    function postMessagePassthrough(s) {
+        oDiv.innerHTML += s + "<br/>";
+    }
+
+    // *** postMessagePassthroughStackbust ***
+    function postMessagePassthroughStackbust(s) {
+        strCode = 'postMessagePassthrough("' + s + '");';
+        setTimeout(strCode, 0);
+    }
+</script>
+</html>
