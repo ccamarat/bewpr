@@ -1,4 +1,4 @@
-chatr!
+bewpr!
 =======
 
 ### What is it?
@@ -12,12 +12,12 @@ is finished, it can be closed on either end.
 ### Getting started
 Install library in your project:
 ```
-npm i -S chatr
+npm i -S bewpr
 ```
 
 #### Create a Guest
 ```javascript
-import {Guest} from 'chatr';
+import {Guest} from 'bewpr';
 
 const button = document.getElementById('some-button');
 const log = document.getElementById('some-div');
@@ -42,7 +42,7 @@ guest.start();
 
 #### Create a Host
 ```javascript
-import {Host} from 'chatr';
+import {Host} from 'bewpr';
 
 const button = document.getElementById('some-button');
 const log = document.getElementById('some-div');

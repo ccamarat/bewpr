@@ -12,13 +12,13 @@
 <div id='divMsgs'></div>
 
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
-<script src="../dist/chatr.js"></script>
+<script src="../dist/bewpr.js"></script>
 <script>
     (function () {
         'use strict';
 
         var oDiv = document.getElementById('divMsgs');
-        var guest = new window.chatr.Guest();
+        var guest = new window.bewpr.Guest();
 
         window.sendMessage = function () {
             guest.sendMessage('Source: <b>Server</b>. Domain: ' + document.domain + '. <b>Via</b>: ' + guest.id);

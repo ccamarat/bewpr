@@ -474,5 +474,5 @@ var Guest = function () {
 exports.Host = Host;
 exports.Guest = Guest;
 
-}((this.chatr = this.chatr || {})));
-//# sourceMappingURL=chatr.js.map
+}((this.bewpr = this.bewpr || {})));
+//# sourceMappingURL=bewpr.js.map
