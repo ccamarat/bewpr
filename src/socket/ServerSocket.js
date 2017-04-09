@@ -8,13 +8,12 @@ export class ServerSocket extends BaseSocket {
 
     start () {
         this.send('', MESSAGE_TYPES.START);
-
-        window.setTimeout(this._sendHeartbeat, DEFAULT_HEALTH_CHECK_INTERVAL);
+        this._sendHeartbeat();
     }
 
     _sendHeartbeat(){
         this.send('', MESSAGE_TYPES.HEARTBEAT);
 
-        window.setTimeout(this._sendHeartbeat, DEFAULT_HEALTH_CHECK_INTERVAL);
+        window.setTimeout(this._sendHeartbeat.bind(this), DEFAULT_HEALTH_CHECK_INTERVAL);
     }
 }

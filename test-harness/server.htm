@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Server</title>
+</head>
+
+<body>
+<h1>Server</h1>
+<button onclick='sendMessage();'>Send postMessage</button>
+<br/>
+
+<div id='divMsgs'></div>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="../dist/chatr.js"></script>
+<script>
+    (function () {
+        'use strict';
+
+        var oDiv = document.getElementById('divMsgs');
+        var guest = new window.chatr.Guest();
+
+        window.sendMessage = function () {
+            guest.sendMessage('Source: <b>Server</b>. Domain: ' + document.domain + '. <b>Via</b>: ' + guest.id);
+        };
+
+        guest.onReceiveMessage = function (message) {
+            oDiv.innerHTML += message + '<br/>';
+        };
+        guest.start();
+    }());
+</script>
+</body>
+
+</html>

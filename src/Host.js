@@ -1,4 +1,4 @@
-import {Serializer} from './util/index'
+import {Serializer, SocketHealthMonitor} from './util/index'
 import {ClientSocket} from './socket/index';
 
 export class Host {
@@ -7,12 +7,12 @@ export class Host {
         this._serializer = Serializer;
     }
 
-    init() {
+    start() {
         // Listen for postMessage events
-        window.addEventListener('message', this._onMessage, false);
+        window.addEventListener('message', this._onMessage.bind(this), false);
 
         // Create the health monitor
-        this._healthMonitor = new SocketHealthMonitor(this._sockets);
+        this._healthMonitor = new SocketHealthMonitor(this, this._sockets);
     }
 
     _onMessage(message) {
@@ -66,13 +66,13 @@ export class Host {
             socket.target.close();
         }
         socket.close();
-        this._sockets[socket._id] = null;
+        this._sockets[socket.id] = null;
     }
 
     // shuts down the host.
     shutdown() {
-        for (let socket of this._sockets) {
-            this.close(socket);
+        for (let ix = 0; ix < this._sockets.length; ix++) {
+            this.close(this._sockets[ix]);
         }
         this._sockets.length = 0;
     }

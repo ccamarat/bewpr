@@ -2,9 +2,9 @@ import {DEFAULT_HEALTH_CHECK_INTERVAL, DEFAULT_HEALTH_CHECK_TIMEOUT} from '../en
 
 // constructor for health monitor
 export class SocketHealthMonitor {
-    constructor(channel, sockets) {
+    constructor(host, sockets) {
         this._lasthealthPoll = Date.now();
-        this._channel = channel;
+        this._host = host;
         this._sockets = sockets;
         this._timerId = null;
     }
@@ -25,8 +25,8 @@ export class SocketHealthMonitor {
         let hasActiveSockets = false;
 
         // loop through the socket array and make sure everyone's playing nice.
-        for (let i = 1; i < this._sockets.length; i++) {
-            socket = this._sockets[i];
+        for (let ix = 0; ix < this._sockets.length; ix++) {
+            const socket = this._sockets[ix];
             if (!socket) {
                 continue;
             }
@@ -35,8 +35,8 @@ export class SocketHealthMonitor {
             hasActiveSockets = true;
 
             // Close any sockets who'se peers have disappeared into the ether.
-            if (socket._started && (this._lasthealthPoll - socket.lastPeerCheckin) > DEFAULT_HEALTH_CHECK_TIMEOUT) {
-                this._channel.close(socket);
+            if (socket.isStarted && (this._lasthealthPoll - socket.lastPeerCheckin) > DEFAULT_HEALTH_CHECK_TIMEOUT) {
+                this._host.close(socket);
             }
         }
 
@@ -48,7 +48,7 @@ export class SocketHealthMonitor {
             this.stop();
         }
 
-        this._timerId = window.setTimeout(this._monitor, DEFAULT_HEALTH_CHECK_INTERVAL);
+        this._timerId = window.setTimeout(this._monitor.bind(this), DEFAULT_HEALTH_CHECK_INTERVAL);
     }
 
     // Stops monitoring the sockets array.

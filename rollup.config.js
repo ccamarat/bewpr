@@ -5,6 +5,7 @@ export default {
     format: 'iife',
     dest: 'dist/chatr.js',
     moduleName: 'chatr',
+    sourceMap: true,
     plugins: [
         babel({
             exclude: 'node_modules/**' // only transpile our source code
