@@ -1,19 +1,23 @@
-import {Serializer} from './util/index'
+import {Serializer} from './util/index';
 import {ServerSocket} from './socket/index';
 
 /**
- * The "Guest" is launched by the host. Typically hosts control guests, but guests can send messages to the host as well.
+ * The "Guest" is launched by the host. Typically hosts control guests, but guests can send messages to the host as
+ * well.
  */
 export class Guest {
-    constructor() {
+    constructor () {
         this._serializer = Serializer;
     }
 
-    start() {
+    /**
+     * Signals that the guest has been configured and is ready to send / receive messages
+     */
+    start () {
         this._server = new ServerSocket();
 
         this._server.onMessage = (...args) => {
-            this.onReceiveMessage(...args);
+            this.onReceiveMessage && this.onReceiveMessage(...args);
         };
 
         window.addEventListener('message', this._onMessage.bind(this), false);
@@ -24,18 +28,24 @@ export class Guest {
         }, false);
     }
 
-    _onMessage(message) {
+    _onMessage (message) {
         const packet = this._serializer.deserialize(message);
 
         this._server.handle(packet);
     }
 
-    onReceiveMessage() {}
-
-    sendMessage(message) {
+    /**
+     * Sends a message to the host.
+     * @param message
+     */
+    sendMessage (message) {
         this._server.send(message);
     }
 
+    /**
+     * Lookup the Host's peer ID. Useful for debugging but not much else.
+     * @returns {*}
+     */
     get id () {
         return this._server.peerId;
     }

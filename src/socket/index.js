@@ -1,3 +1,3 @@
 export * from './ServerSocket';
-export * from './ClientSocket';
+export * from './Socket';
 export * from '../util/Serializer';

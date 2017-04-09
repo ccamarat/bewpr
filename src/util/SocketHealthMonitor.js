@@ -1,44 +1,40 @@
 import {DEFAULT_HEALTH_CHECK_INTERVAL, DEFAULT_HEALTH_CHECK_TIMEOUT} from '../enums';
 
-// constructor for health monitor
 export class SocketHealthMonitor {
-    constructor(host, sockets) {
+    constructor (host, sockets) {
         this._lasthealthPoll = Date.now();
         this._host = host;
         this._sockets = sockets;
         this._timerId = null;
     }
 
-    // starts monitoring the sockets array (if it's not already doing so)
+    /**
+     * starts monitoring the sockets array (if it's not already doing so)
+     */
     start () {
         if (!this._timerId) {
             this._monitor();
         }
     }
 
-    // function to perform actual monitoring
-    _monitor() {
-        // socket reference
-        let socket;
-
+    _monitor () {
         // indicates whether any active sockets were found. Used to optionally stop monitoring.
         let hasActiveSockets = false;
 
         // loop through the socket array and make sure everyone's playing nice.
-        for (let ix = 0; ix < this._sockets.length; ix++) {
-            const socket = this._sockets[ix];
+        this._sockets.forEach((socket) => {
             if (!socket) {
-                continue;
+                return;
             }
 
             // Indicate that someone's alive
             hasActiveSockets = true;
 
             // Close any sockets who'se peers have disappeared into the ether.
-            if (socket.isStarted && (this._lasthealthPoll - socket.lastPeerCheckin) > DEFAULT_HEALTH_CHECK_TIMEOUT) {
+            if (socket.isStarted && this._lasthealthPoll - socket.lastPeerCheckin > DEFAULT_HEALTH_CHECK_TIMEOUT) {
                 this._host.close(socket);
             }
-        }
+        });
 
         // Update
         this._lasthealthPoll = Date.now();
@@ -51,8 +47,10 @@ export class SocketHealthMonitor {
         this._timerId = window.setTimeout(this._monitor.bind(this), DEFAULT_HEALTH_CHECK_INTERVAL);
     }
 
-    // Stops monitoring the sockets array.
-    stop() {
+    /**
+     * Stops monitoring the sockets array.
+     */
+    stop () {
         if (this._timerId) {
             window.clearTimeout(this._timerId);
             this._timerId = null;

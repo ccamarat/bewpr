@@ -1,13 +1,16 @@
-import {Serializer, SocketHealthMonitor} from './util/index'
-import {ClientSocket} from './socket/index';
+import {Serializer, SocketHealthMonitor} from './util/index';
+import {Socket} from './socket/index';
 
 export class Host {
-    constructor() {
+    constructor () {
         this._sockets = [];
         this._serializer = Serializer;
     }
 
-    start() {
+    /**
+     * Signal that the host has been configured and is ready to start creating guests.
+     */
+    start () {
         // Listen for postMessage events
         window.addEventListener('message', this._onMessage.bind(this), false);
 
@@ -15,7 +18,7 @@ export class Host {
         this._healthMonitor = new SocketHealthMonitor(this, this._sockets);
     }
 
-    _onMessage(message) {
+    _onMessage (message) {
         const packet = this._serializer.deserialize(message);
         const socket = this._sockets[packet.targetId];
 
@@ -31,26 +34,21 @@ export class Host {
     }
 
     /**
-     * creates a 'channel' by opening a new window or iFrame and passing that reference to a socket instance,
+     * creates a guest session by opening a new window and passing that reference to a socket instance,
      * then returns the socket
      * @param options
-     * @returns {BaseSocket}
+     * @returns {Socket}
      */
-    create(options) {
-        // The 'endpoint' is the target window
-        let endpoint;
-
+    create (options) {
         // the socket id is simply the next available slot in the sockets array
         const socketId = this._sockets.length;
 
-        // socket to be returned
-        let socket;
-
-        // open a new window
-        endpoint = window.open(options.target, socketId.toString(), options.windowOptions);
+        // The 'endpoint' is the target window
+        const endpoint = window.open(options.target, socketId.toString(), options.windowOptions);
 
         // new up a socket and store it in our socket's array
-        socket = new ClientSocket(socketId, endpoint);
+        const socket = new Socket(socketId, endpoint);
+
         this._sockets.push(socket);
 
         // ensure socket monitoring is active
@@ -60,8 +58,11 @@ export class Host {
         return socket;
     }
 
-    // close the socket. Renders it pretty much useless.
-    close(socket) {
+    /**
+     * Close the socket, which renders it pretty much useless.
+     * @param socket
+     */
+    close (socket) {
         if (socket.target) {
             socket.target.close();
         }
@@ -69,8 +70,10 @@ export class Host {
         this._sockets[socket.id] = null;
     }
 
-    // shuts down the host.
-    shutdown() {
+    /**
+     * shuts down the host.
+     */
+    shutdown () {
         for (let ix = 0; ix < this._sockets.length; ix++) {
             this.close(this._sockets[ix]);
         }
