@@ -1,6 +1,6 @@
-import {DEFAULT_HEALTH_CHECK_INTERVAL, DEFAULT_HEALTH_CHECK_TIMEOUT} from '../enums';
+import {DEFAULT_HEALTH_CHECK_INTERVAL, DEFAULT_HEALTH_CHECK_TIMEOUT} from './enums';
 
-export class SocketHealthMonitor {
+export class HeartbeatMonitor {
     constructor (host, sockets) {
         this._lasthealthPoll = Date.now();
         this._host = host;

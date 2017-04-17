@@ -1,10 +1,10 @@
-import {Serializer, SocketHealthMonitor} from './util/index';
-import {Socket} from './socket/index';
+import {HeartbeatMonitor} from './HeartbeatMonitor';
+import {Serializer} from './Serializer';
+import {Socket} from './Socket';
 
 export class Host {
     constructor () {
         this._sockets = [];
-        this._serializer = Serializer;
     }
 
     /**
@@ -15,11 +15,11 @@ export class Host {
         window.addEventListener('message', this._onMessage.bind(this), false);
 
         // Create the health monitor
-        this._healthMonitor = new SocketHealthMonitor(this, this._sockets);
+        this._healthMonitor = new HeartbeatMonitor(this, this._sockets);
     }
 
     _onMessage (message) {
-        const packet = this._serializer.deserialize(message);
+        const packet = Serializer.deserialize(message.data);
         const socket = this._sockets[packet.targetId];
 
         // verify the socket reference

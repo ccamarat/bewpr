@@ -1,4 +1,4 @@
-import {Socket} from '../../src/socket/Socket';
+import {Socket} from '../src/Socket';
 
 describe('Socket', () => {
     let mockTarget;

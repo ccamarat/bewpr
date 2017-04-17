@@ -1,7 +1,5 @@
 var babel = require('rollup-plugin-babel');
 
-var singleRun = process.env.hasOwnProperty('SINGLE_RUN') ? process.env.SINGLE_RUN : true;
-
 module.exports = function (config) {
   'use strict';
 
@@ -50,8 +48,6 @@ module.exports = function (config) {
         base: 'IE',
         flags: ['-extoff']
       }
-    },
-
-    // singleRun: singleRun
+    }
   });
 };

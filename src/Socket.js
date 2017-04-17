@@ -1,11 +1,10 @@
-import {Serializer} from '../util/index';
-import {MESSAGE_TYPES} from '../enums';
+import {Serializer} from './Serializer';
+import {MESSAGE_TYPES} from './enums';
 
 /**
  * The socket is the primary means a client communicates with a peer server.
  */
 export class Socket {
-
     /**
      * Creates a socket instance.
      * @param id - this instance's id. Used to locate it when message is received.
@@ -13,8 +12,6 @@ export class Socket {
      * @param peerId - The id of the peer socket.
      */
     constructor (id, target, peerId) {
-        this._serializer = Serializer;
-
         this.id = id;
 
         this.peerId = peerId;
@@ -34,7 +31,7 @@ export class Socket {
      * @param type - type of message to send. Defaults to "DATA"
      */
     send (message, type = MESSAGE_TYPES.DATA) {
-        this.target.postMessage(this._serializer.serialize(this, message, type), '*');
+        this.target.postMessage(Serializer.serialize(this.id, this.peerId, message, type), '*');
     }
 
     /**
@@ -45,13 +42,13 @@ export class Socket {
     }
 
     /**
-     * Handles a message from a peer.
-     * @param message message to handle
+     * Handles a deserialized packet from a peer.
+     * @param packet packet to handle
      */
-    handle (message) {
+    handle (packet) {
         this.lastPeerCheckin = Date.now();
 
-        switch (message.type) {
+        switch (packet.type) {
             case MESSAGE_TYPES.START:
                 this.isStarted = true;
                 this.onStart && this.onStart();
@@ -59,7 +56,7 @@ export class Socket {
             case MESSAGE_TYPES.HEARTBEAT:
                 break;
             default:
-                this.onMessage && this.onMessage(message.payload);
+                this.onMessage && this.onMessage(packet.message);
         }
     }
 }
