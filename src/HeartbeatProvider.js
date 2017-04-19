@@ -2,7 +2,7 @@ import {DEFAULT_HEALTH_CHECK_INTERVAL, MESSAGE_TYPES} from './enums';
 import {Socket} from './Socket';
 
 /**
- * Server; includes automatic heartbeat.
+ * HeartbeatProvider; includes automatic heartbeat.
  */
 export class HeartbeatProvider {
     constructor(socket){

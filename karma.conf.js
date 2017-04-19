@@ -9,6 +9,7 @@ module.exports = function (config) {
     basePath: '',
 
     files: [
+      'specs/helpers/**/*.js',
       'specs/**/*-spec.js'
     ],
 
@@ -16,7 +17,7 @@ module.exports = function (config) {
     ],
 
     preprocessors: {
-      'specs/**/*-spec.js': ['rollup']
+      'specs/**/*.js': ['rollup']
     },
 
     rollupPreprocessor: {

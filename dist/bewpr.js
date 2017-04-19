@@ -340,6 +340,9 @@ var Host = function () {
     return Host;
 }();
 
+/**
+ * HeartbeatProvider; includes automatic heartbeat.
+ */
 var HeartbeatProvider = function () {
     function HeartbeatProvider(socket) {
         classCallCheck(this, HeartbeatProvider);

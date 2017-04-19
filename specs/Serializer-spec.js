@@ -1,6 +1,6 @@
 import {Serializer, ERRORS} from '../src/Serializer';
 
-fdescribe('Serializer', () => {
+describe('Serializer', () => {
     let socket;
     beforeEach(() => {
         socket = {
