@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Client Window</title>
+</head>
+<body>
+<h1>Client</h1>
+<div id="buttons"></div>
+<hr/>
+<button onclick="createSocket();">Create Server</button>
+<br/>
+<div id="divMsgs"></div>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="../dist/bewpr.js"></script>
+<script>
+    (function () {
+        'use strict';
+
+        var oDiv = document.getElementById('divMsgs');
+        var host = new window.bewpr.Host();
+
+        function createButton(socket) {
+            var button = $('<div><span class="id"></span>: <button class="send">Send Message</button><button class="close">close</button></div>');
+            socket.button = button;
+            button.find('.id').text(socket.id);
+            button.on('click', '.send', function () {
+                socket.send('hello world');
+            });
+            button.on('click', '.close', function () {
+                host.close(socket);
+                button.off();
+                button.remove();
+            });
+            $('#buttons').append(button);
+        }
+        window.createSocket = function () {
+            var socket = host.create({
+                target: './guest.htm',
+                windowOptions: 'left=400,top=200,height=500,width=500,status=yes,toolbar=no,menubar=no,location=yes'
+            });
+            socket.onStart = function () {
+                oDiv.innerHTML += 'Socket ' + socket.id + ' is officially open.<br/>';
+            };
+            socket.onMessage = function (message) {
+                oDiv.innerHTML += message + '<br/>';
+            };
+            socket.onClose = function () {
+                var button = socket.button;
+                button.off();
+                button.remove();
+                oDiv.innerHTML += 'Socket ' + socket.id + ' is closed.<br/>';
+            };
+            createButton(socket);
+        };
+
+        host.start();
+    }());
+</script>
+</body>
+</html>

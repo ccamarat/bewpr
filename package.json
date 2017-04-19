@@ -1,0 +1,49 @@
+{
+  "name": "bewpr",
+  "title": "bewpr",
+  "description": "Javascript library for messaging between web application windows.",
+  "version": "0.1.0",
+  "author": "Chris Camaratta <chris.camaratta@hotmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ccamarat/bewpr.git"
+  },
+  "keywords": [
+    "bewpr",
+    "messaging",
+    "postmessage",
+    "javascript",
+    "browser",
+    "library"
+  ],
+  "bugs": {
+    "url": "https://github.com/ccamarat/bewpr/issues"
+  },
+  "main": "dist/bewpr.js",
+  "jsnext:main": "src/index.js",
+  "unpkg": "dist/bewpr.js",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "test": "karma start",
+    "test:dev": "karma start --no-single-run",
+    "lint": "eslint ./src",
+    "lint:fix": "npm run lint -- --fix"
+  },
+  "devDependencies": {
+    "babel-plugin-external-helpers": "^6.22.0",
+    "babel-preset-latest": "^6.24.1",
+    "eslint": "^3.19.0",
+    "jasmine": "^2.5.3",
+    "karma": "^1.6.0",
+    "karma-chrome-launcher": "^2.0.0",
+    "karma-firefox-launcher": "^1.0.1",
+    "karma-ie-launcher": "^1.0.0",
+    "karma-jasmine": "^1.1.0",
+    "karma-rollup-plugin": "^0.2.4",
+    "rollup": "^0.41.6",
+    "rollup-plugin-babel": "^2.7.1",
+    "rollup-watch": "^3.2.2"
+  }
+}
