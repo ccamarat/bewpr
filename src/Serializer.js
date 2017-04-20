@@ -7,9 +7,9 @@ export class Serializer {
      * @param message - Message to send
      * @param type - Type of message
      */
-    static serialize(sourceId, targetId, message, type) {
+    static serialize (sourceId, targetId, message, type) {
         const payload = JSON.stringify(message);
-console.log(payload);
+
         if (!payload) {
             throw new Error(`cannot serialize '${message}'`);
         }
@@ -21,9 +21,7 @@ console.log(payload);
             payload
         };
 
-        const s = JSON.stringify(packet);
-console.log(s);
-        return s;
+        return JSON.stringify(packet);
     }
 
     /**
@@ -31,7 +29,7 @@ console.log(s);
      * @param message
      * @returns {{sourceId: *, targetId: (number|*), message: *, type: *}}
      */
-    static deserialize(message) {
+    static deserialize (message) {
         const packet = JSON.parse(message);
 
         return {

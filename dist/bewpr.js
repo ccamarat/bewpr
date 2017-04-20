@@ -128,7 +128,7 @@ var Serializer = function () {
          */
         value: function serialize(sourceId, targetId, message, type) {
             var payload = JSON.stringify(message);
-            console.log(payload);
+
             if (!payload) {
                 throw new Error("cannot serialize '" + message + "'");
             }
@@ -140,9 +140,7 @@ var Serializer = function () {
                 payload: payload
             };
 
-            var s = JSON.stringify(packet);
-            console.log(s);
-            return s;
+            return JSON.stringify(packet);
         }
 
         /**
@@ -171,6 +169,7 @@ var Serializer = function () {
  * The socket is the primary means a client communicates with a peer server.
  */
 var Socket = function () {
+
     /**
      * Creates a socket instance.
      * @param id - this instance's id. Used to locate it when message is received.
@@ -385,6 +384,7 @@ var Guest = function () {
 
     createClass(Guest, [{
         key: 'start',
+
 
         /**
          * Signals that the guest has been configured and is ready to send / receive messages

@@ -5,6 +5,7 @@ import {MESSAGE_TYPES} from './enums';
  * The socket is the primary means a client communicates with a peer server.
  */
 export class Socket {
+
     /**
      * Creates a socket instance.
      * @param id - this instance's id. Used to locate it when message is received.

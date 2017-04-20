@@ -9,10 +9,11 @@ const DEFAULT_SERVER_SOCKET_ID = 0;
  * well.
  */
 export class Guest {
+
     /**
      * Signals that the guest has been configured and is ready to send / receive messages
      */
-    start() {
+    start () {
         this._socket = new Socket(DEFAULT_SERVER_SOCKET_ID, window.opener || window.top, parseInt(window.name, 10));
 
         this._socket.onMessage = (...args) => {
@@ -29,7 +30,7 @@ export class Guest {
         }, false);
     }
 
-    _onMessage(message) {
+    _onMessage (message) {
         const packet = Serializer.deserialize(message.data);
 
         this._socket.handle(packet);
@@ -39,7 +40,7 @@ export class Guest {
      * Sends a message to the host.
      * @param message
      */
-    sendMessage(message) {
+    sendMessage (message) {
         this._socket.send(message);
     }
 
@@ -47,7 +48,7 @@ export class Guest {
      * Lookup the Host's peer ID. Useful for debugging but not much else.
      * @returns {*}
      */
-    get id() {
+    get id () {
         return this._socket.peerId;
     }
 }
