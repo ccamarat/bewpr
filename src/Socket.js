@@ -28,10 +28,6 @@ class MessageQueue {
     }
 }
 
-const noop = () => {
-    // No op function intentionally left blank.
-};
-
 /**
  * The socket is the primary means a client communicates with a peer server.
  */
@@ -77,7 +73,6 @@ export class Socket {
 
             resolver.messageId = this.messages.add(resolver);
             resolver.timerId = window.setTimeout(() => {
-                this._timeoutCount += 1;
                 reject(new Error('TIMEOUT'));
             }, DEFAULT_TIMEOUT);
 
@@ -125,7 +120,7 @@ export class Socket {
 
         switch (packet.type) {
             case MESSAGE_TYPES.START:
-                this.onStart && this.onStart();
+                this.onStart();
                 this.isStarted = true;
                 break;
             case MESSAGE_TYPES.ACK:
@@ -134,12 +129,35 @@ export class Socket {
             case MESSAGE_TYPES.HEARTBEAT:
                 break;
             default:
-                this.onMessage && this.onMessage(packet.message);
+                this.onMessage(packet.message);
         }
 
         // Acknowledge all messages.
         if (packet.type !== MESSAGE_TYPES.ACK) {
             this.ack(packet.messageId);
         }
+    }
+
+    /**
+     * Stub method; intended to be overridden by the consumer. This method is called when the socket is closed.
+     */
+    onClose () {
+        // Stub handler, intended to be overridden.
+    }
+
+    /**
+     * Stub method; intended to be overridden by the consumer. This method is called when the socket receives a message
+     * from its peer.
+     */
+    onMessage () {
+        // Stub handler, intended to be overridden.
+    }
+
+    /**
+     * Stub method; intended to be overridden by the consumer. This method is called when the socket receives the first
+     * message from its peer, meaning the connection is officially active.
+     */
+    onStart () {
+        // Stub handler, intended to be overridden.
     }
 }
