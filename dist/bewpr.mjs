@@ -1,9 +1,3 @@
-(function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-	typeof define === 'function' && define.amd ? define(['exports'], factory) :
-	(factory((global.bewpr = global.bewpr || {})));
-}(this, (function (exports) { 'use strict';
-
 var DEFAULT_HEALTH_CHECK_INTERVAL = 1000;
 var DEFAULT_HEALTH_CHECK_TIMEOUT = 5000;
 var DEFAULT_TIMEOUT = 5000;
@@ -540,10 +534,5 @@ var Guest = function () {
     return Guest;
 }();
 
-exports.Host = Host;
-exports.Guest = Guest;
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-})));
-//# sourceMappingURL=bewpr.js.map
+export { Host, Guest };
+//# sourceMappingURL=bewpr.mjs.map
