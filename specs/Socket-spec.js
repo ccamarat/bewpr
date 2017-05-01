@@ -1,8 +1,9 @@
-import {MESSAGE_TYPES} from '../src/enums';
+import {MESSAGE_TYPES, DEFAULT_TIMEOUT} from '../src/enums';
 import {Socket} from '../src/Socket';
 
 describe('Socket', () => {
     let mockTarget;
+
     beforeEach(()=> {
         mockTarget = {
             postMessage: jasmine.createSpy('postMessage')
@@ -54,5 +55,47 @@ describe('Socket', () => {
         subject.handle({});
 
         expect(subject.onMessage).toHaveBeenCalled();
+    });
+
+    describe('timeouts', () => {
+        // Note: I'd prefer to use Jasmine's clock, but doing so interfers with native promises, somehow...
+        let originalTimeout;
+        beforeEach(function() {
+            originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
+            jasmine.DEFAULT_TIMEOUT_INTERVAL = DEFAULT_TIMEOUT * 2;
+        });
+        afterEach(function() {
+            jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
+        });
+
+        it('should resolve the response promise on success', (done) => {
+            const subject = new Socket(1, mockTarget, 2);
+            const spy = jasmine.createSpy('spy');
+            subject.send('test').then(spy);
+
+            // Simulate a response.
+            const messageId = Object.keys(subject.messages._items)[0];
+            subject.handle({
+                type: MESSAGE_TYPES.ACK,
+                messageId
+            });
+
+            setTimeout(() => {
+                expect(spy).toHaveBeenCalled();
+                done();
+            }, 10);
+        });
+
+        it('should reject the response promise on success', (done) => {
+            const subject = new Socket(1, mockTarget, 2);
+            const spy = jasmine.createSpy('spy');
+            subject.send('test').catch(spy);
+
+            setTimeout(() => {
+                expect(spy).toHaveBeenCalled();
+                done();
+            }, DEFAULT_TIMEOUT + 100);
+        });
+
     });
 });

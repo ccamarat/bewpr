@@ -89,7 +89,7 @@ module.exports = {
         ],
         "max-lines": "error",
         "max-nested-callbacks": "error",
-        "max-params": "error",
+        "max-params": ["error", 4],
         "max-statements": "error",
         "max-statements-per-line": "error",
         "multiline-ternary": "error",
@@ -213,7 +213,6 @@ module.exports = {
         "prefer-destructuring": "error",
         "prefer-numeric-literals": "error",
         "prefer-promise-reject-errors": "error",
-        "prefer-reflect": "error",
         "prefer-rest-params": "error",
         "prefer-spread": "error",
         "prefer-template": "error",
@@ -244,7 +243,7 @@ module.exports = {
         "sort-keys": "off",
         "sort-vars": "error",
         "space-before-blocks": "error",
-        "space-before-function-paren": "error",
+        "space-before-function-paren": "off",
         "space-in-parens": [
             "error",
             "never"

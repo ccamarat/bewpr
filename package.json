@@ -2,7 +2,7 @@
   "name": "bewpr",
   "title": "bewpr",
   "description": "Javascript library for messaging between web application windows.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Chris Camaratta <chris.camaratta@hotmail.com>",
   "license": "MIT",
   "repository": {
@@ -26,13 +26,16 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "test": "karma start",
     "test:dev": "karma start --no-single-run",
+    "test": "karma start --single-run",
     "lint": "eslint ./src",
-    "lint:fix": "npm run lint -- --fix"
+    "lint:fix": "npm run lint -- --fix",
+    "prebuild": "npm run test",
+    "pretest": "npm run lint"
   },
   "devDependencies": {
     "babel-plugin-external-helpers": "^6.22.0",
+    "babel-polyfill": "^6.23.0",
     "babel-preset-latest": "^6.24.1",
     "eslint": "^3.19.0",
     "jasmine": "^2.5.3",

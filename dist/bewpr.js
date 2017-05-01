@@ -3,15 +3,17 @@
 
 var DEFAULT_HEALTH_CHECK_INTERVAL = 1000;
 var DEFAULT_HEALTH_CHECK_TIMEOUT = 5000;
+var DEFAULT_TIMEOUT = 5000;
 
 /**
  * Possible message types sent/recv'd by a socket
  * @type {{DATA: string, START: string, HEARTBEAT: string}}
  */
 var MESSAGE_TYPES = {
-  DATA: 'data',
-  START: 'start',
-  HEARTBEAT: 'heartbeat'
+    DATA: 'data',
+    START: 'start',
+    ACK: 'ack',
+    HEARTBEAT: 'heartbeat'
 };
 
 var classCallCheck = function (instance, Constructor) {
@@ -110,67 +112,55 @@ var HeartbeatMonitor = function () {
     return HeartbeatMonitor;
 }();
 
-var Serializer = function () {
-    function Serializer() {
-        classCallCheck(this, Serializer);
+var Serializer = {
+    serialize: JSON.stringify,
+    deserialize: JSON.parse
+};
+
+var makeId = function makeId() {
+    return Date.now() + Math.random();
+};
+
+var MessageQueue = function () {
+    function MessageQueue() {
+        classCallCheck(this, MessageQueue);
+
+        this._items = {};
     }
 
-    createClass(Serializer, null, [{
-        key: "serialize",
+    createClass(MessageQueue, [{
+        key: 'add',
+        value: function add(resolver) {
+            var id = makeId();
 
+            this._items[id] = resolver;
 
-        /**
-         * Turns a message into a packet containing information about the message's type and route.
-         * @param sourceId - ID of socket sending the message
-         * @param targetId - Target Socket ID sending the message
-         * @param message - Message to send
-         * @param type - Type of message
-         */
-        value: function serialize(sourceId, targetId, message, type) {
-            var payload = JSON.stringify(message);
-            console.log(payload);
-            if (!payload) {
-                throw new Error("cannot serialize '" + message + "'");
-            }
-
-            var packet = {
-                type: type,
-                sourceId: sourceId,
-                targetId: targetId,
-                payload: payload
-            };
-
-            var s = JSON.stringify(packet);
-            console.log(s);
-            return s;
+            return id;
         }
-
-        /**
-         *
-         * @param message
-         * @returns {{sourceId: *, targetId: (number|*), message: *, type: *}}
-         */
-
     }, {
-        key: "deserialize",
-        value: function deserialize(message) {
-            var packet = JSON.parse(message);
-
-            return {
-                sourceId: packet.sourceId,
-                targetId: packet.targetId,
-                message: JSON.parse(packet.payload),
-                type: packet.type
-            };
+        key: 'acknowledge',
+        value: function acknowledge(id) {
+            clearTimeout(this._items[id].timerId);
+            this._items[id].resolve();
+            delete this._items[id];
+        }
+    }, {
+        key: 'fail',
+        value: function fail(id) {
+            this._items[id].reject();
+            delete this._items[id];
         }
     }]);
-    return Serializer;
+    return MessageQueue;
 }();
 
 /**
  * The socket is the primary means a client communicates with a peer server.
  */
+
+
 var Socket = function () {
+
     /**
      * Creates a socket instance.
      * @param id - this instance's id. Used to locate it when message is received.
@@ -179,6 +169,8 @@ var Socket = function () {
      */
     function Socket(id, target, peerId) {
         classCallCheck(this, Socket);
+
+        this.messages = new MessageQueue();
 
         this.id = id;
 
@@ -203,9 +195,54 @@ var Socket = function () {
     createClass(Socket, [{
         key: 'send',
         value: function send(message) {
+            var _this = this;
+
             var type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : MESSAGE_TYPES.DATA;
 
-            this.target.postMessage(Serializer.serialize(this.id, this.peerId, message, type), '*');
+            if (type === MESSAGE_TYPES.START) {
+                this.isStarted = true;
+            }
+
+            return new Promise(function (resolve, reject) {
+                var resolver = {
+                    resolve: resolve,
+                    reject: reject
+                };
+
+                resolver.messageId = _this.messages.add(resolver);
+                resolver.timerId = window.setTimeout(function () {
+                    reject(new Error('TIMEOUT'));
+                }, DEFAULT_TIMEOUT);
+
+                var packet = {
+                    sourceId: _this.id,
+                    targetId: _this.peerId,
+                    messageId: resolver.messageId,
+                    message: message,
+                    type: type
+                };
+
+                _this.target.postMessage(Serializer.serialize(packet), '*');
+            });
+        }
+
+        /**
+         * Acknowledges a message.
+         * @param messageId message ID to ack.
+         */
+
+    }, {
+        key: 'ack',
+        value: function ack(messageId) {
+            var packet = {
+                sourceId: this.id,
+                targetId: this.peerId,
+                messageId: messageId,
+                message: '',
+                type: MESSAGE_TYPES.ACK
+            };
+
+            this.target.postMessage(Serializer.serialize(packet), '*');
         }
 
         /**
@@ -230,14 +267,54 @@ var Socket = function () {
 
             switch (packet.type) {
                 case MESSAGE_TYPES.START:
+                    this.onStart();
                     this.isStarted = true;
-                    this.onStart && this.onStart();
+                    break;
+                case MESSAGE_TYPES.ACK:
+                    this.messages.acknowledge(packet.messageId);
                     break;
                 case MESSAGE_TYPES.HEARTBEAT:
                     break;
                 default:
-                    this.onMessage && this.onMessage(packet.message);
+                    this.onMessage(packet.message);
             }
+
+            // Acknowledge all messages.
+            if (packet.type !== MESSAGE_TYPES.ACK) {
+                this.ack(packet.messageId);
+            }
+        }
+
+        /**
+         * Stub method; intended to be overridden by the consumer. This method is called when the socket is closed.
+         */
+
+    }, {
+        key: 'onClose',
+        value: function onClose() {}
+        // Stub handler, intended to be overridden.
+
+
+        /**
+         * Stub method; intended to be overridden by the consumer. This method is called when the socket receives a message
+         * from its peer.
+         */
+
+    }, {
+        key: 'onMessage',
+        value: function onMessage() {}
+        // Stub handler, intended to be overridden.
+
+
+        /**
+         * Stub method; intended to be overridden by the consumer. This method is called when the socket receives the first
+         * message from its peer, meaning the connection is officially active.
+         */
+
+    }, {
+        key: 'onStart',
+        value: function onStart() {
+            // Stub handler, intended to be overridden.
         }
     }]);
     return Socket;
@@ -248,23 +325,14 @@ var Host = function () {
         classCallCheck(this, Host);
 
         this._sockets = [];
+        // Listen for postMessage events
+        window.addEventListener('message', this._onMessage.bind(this), false);
+
+        // Create the health monitor
+        this._healthMonitor = new HeartbeatMonitor(this, this._sockets);
     }
 
-    /**
-     * Signal that the host has been configured and is ready to start creating guests.
-     */
-
-
     createClass(Host, [{
-        key: 'start',
-        value: function start() {
-            // Listen for postMessage events
-            window.addEventListener('message', this._onMessage.bind(this), false);
-
-            // Create the health monitor
-            this._healthMonitor = new HeartbeatMonitor(this, this._sockets);
-        }
-    }, {
         key: '_onMessage',
         value: function _onMessage(message) {
             var packet = Serializer.deserialize(message.data);
@@ -302,11 +370,20 @@ var Host = function () {
 
             this._sockets.push(socket);
 
-            // ensure socket monitoring is active
+            // ensure socket monitoring is active (it stops polling when all sockets are closed)
             this._healthMonitor.start();
 
-            // give the people what they ask for
-            return socket;
+            return new Promise(function (resolve, reject) {
+                var timerId = setTimeout(function () {
+                    socket.close();
+                    reject(new Error('TIMEOUT'));
+                }, DEFAULT_TIMEOUT);
+
+                socket.onStart = function () {
+                    clearTimeout(timerId);
+                    resolve(socket);
+                };
+            });
         }
 
         /**
@@ -386,6 +463,7 @@ var Guest = function () {
     createClass(Guest, [{
         key: 'start',
 
+
         /**
          * Signals that the guest has been configured and is ready to send / receive messages
          */
@@ -393,6 +471,8 @@ var Guest = function () {
             var _this = this;
 
             this._socket = new Socket(DEFAULT_SERVER_SOCKET_ID, window.opener || window.top, parseInt(window.name, 10));
+
+            this._healthMonitor = new HeartbeatMonitor(this, [this._socket]);
 
             this._socket.onMessage = function () {
                 _this.onReceiveMessage && _this.onReceiveMessage.apply(_this, arguments);
@@ -406,10 +486,17 @@ var Guest = function () {
             window.addEventListener('load', function () {
                 heartbeat.start();
             }, false);
+
+            // ensure socket monitoring is active
+            this._healthMonitor.start();
         }
     }, {
         key: '_onMessage',
         value: function _onMessage(message) {
+            // On page reloads when the parent window is closed, postMessage sends to itself.
+            if (message.source === window) {
+                return;
+            }
             var packet = Serializer.deserialize(message.data);
 
             this._socket.handle(packet);
@@ -424,6 +511,16 @@ var Guest = function () {
         key: 'sendMessage',
         value: function sendMessage(message) {
             this._socket.send(message);
+        }
+
+        /**
+         * Closes the guest window!
+         */
+
+    }, {
+        key: 'close',
+        value: function close() {
+            window.close();
         }
 
         /**

@@ -1,16 +1,11 @@
 import {HeartbeatMonitor} from './HeartbeatMonitor';
 import {Serializer} from './Serializer';
 import {Socket} from './Socket';
+import {DEFAULT_TIMEOUT} from './enums';
 
 export class Host {
     constructor () {
         this._sockets = [];
-    }
-
-    /**
-     * Signal that the host has been configured and is ready to start creating guests.
-     */
-    start () {
         // Listen for postMessage events
         window.addEventListener('message', this._onMessage.bind(this), false);
 
@@ -51,11 +46,20 @@ export class Host {
 
         this._sockets.push(socket);
 
-        // ensure socket monitoring is active
+        // ensure socket monitoring is active (it stops polling when all sockets are closed)
         this._healthMonitor.start();
 
-        // give the people what they ask for
-        return socket;
+        return new Promise((resolve, reject) => {
+            const timerId = setTimeout(() => {
+                socket.close();
+                reject(new Error('TIMEOUT'));
+            }, DEFAULT_TIMEOUT);
+
+            socket.onStart = () => {
+                clearTimeout(timerId);
+                resolve(socket);
+            };
+        });
     }
 
     /**
