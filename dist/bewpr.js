@@ -154,6 +154,11 @@ var MessageQueue = function () {
     return MessageQueue;
 }();
 
+/**
+ * The socket is the primary means a client communicates with a peer server.
+ */
+
+
 var Socket = function () {
 
     /**
@@ -206,7 +211,6 @@ var Socket = function () {
 
                 resolver.messageId = _this.messages.add(resolver);
                 resolver.timerId = window.setTimeout(function () {
-                    _this._timeoutCount += 1;
                     reject(new Error('TIMEOUT'));
                 }, DEFAULT_TIMEOUT);
 
@@ -263,7 +267,7 @@ var Socket = function () {
 
             switch (packet.type) {
                 case MESSAGE_TYPES.START:
-                    this.onStart && this.onStart();
+                    this.onStart();
                     this.isStarted = true;
                     break;
                 case MESSAGE_TYPES.ACK:
@@ -272,13 +276,45 @@ var Socket = function () {
                 case MESSAGE_TYPES.HEARTBEAT:
                     break;
                 default:
-                    this.onMessage && this.onMessage(packet.message);
+                    this.onMessage(packet.message);
             }
 
             // Acknowledge all messages.
             if (packet.type !== MESSAGE_TYPES.ACK) {
                 this.ack(packet.messageId);
             }
+        }
+
+        /**
+         * Stub method; intended to be overridden by the consumer. This method is called when the socket is closed.
+         */
+
+    }, {
+        key: 'onClose',
+        value: function onClose() {}
+        // Stub handler, intended to be overridden.
+
+
+        /**
+         * Stub method; intended to be overridden by the consumer. This method is called when the socket receives a message
+         * from its peer.
+         */
+
+    }, {
+        key: 'onMessage',
+        value: function onMessage() {}
+        // Stub handler, intended to be overridden.
+
+
+        /**
+         * Stub method; intended to be overridden by the consumer. This method is called when the socket receives the first
+         * message from its peer, meaning the connection is officially active.
+         */
+
+    }, {
+        key: 'onStart',
+        value: function onStart() {
+            // Stub handler, intended to be overridden.
         }
     }]);
     return Socket;
@@ -381,6 +417,9 @@ var Host = function () {
     return Host;
 }();
 
+/**
+ * HeartbeatProvider; includes automatic heartbeat.
+ */
 var HeartbeatProvider = function () {
     function HeartbeatProvider(socket) {
         classCallCheck(this, HeartbeatProvider);
