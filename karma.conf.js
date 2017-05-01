@@ -1,4 +1,5 @@
 var babel = require('rollup-plugin-babel');
+var babelrc = require('babelrc-rollup').default;
 
 module.exports = function (config) {
     'use strict';
@@ -22,10 +23,7 @@ module.exports = function (config) {
 
         rollupPreprocessor: {
             plugins: [
-                babel({
-                    // only transpile our source code
-                    exclude: 'node_modules/**'
-                })
+                babel(babelrc())
             ],
 
             // will help to prevent conflicts between different tests entries

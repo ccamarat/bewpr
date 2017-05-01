@@ -1,14 +1,24 @@
 import babel from 'rollup-plugin-babel';
+import babelrc from 'babelrc-rollup';
+
+const pkg = require('./package.json');
 
 export default {
     entry: 'src/index.js',
-    format: 'iife',
-    dest: 'dist/bewpr.js',
-    moduleName: 'bewpr',
-    sourceMap: true,
     plugins: [
-        babel({
-            exclude: 'node_modules/**' // only transpile our source code
-        })
+        babel(babelrc())
+    ],
+    targets: [
+        {
+            dest: pkg.main,
+            format: 'umd',
+            moduleName: 'bewpr',
+            sourceMap: true
+        },
+        {
+            dest: pkg.module,
+            format: 'es',
+            sourceMap: true
+        }
     ]
 };
