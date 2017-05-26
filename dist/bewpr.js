@@ -149,8 +149,8 @@ var MessageQueue = function () {
         }
     }, {
         key: 'fail',
-        value: function fail(id) {
-            this._items[id].reject();
+        value: function fail(id, error) {
+            this._items[id].reject(error);
             delete this._items[id];
         }
     }]);
@@ -207,20 +207,20 @@ var Socket = function () {
             }
 
             return new Promise(function (resolve, reject) {
+                // eslint-disable-next-line prefer-const
+                var packet = void 0;
                 var resolver = {
                     resolve: resolve,
-                    reject: reject
+                    reject: reject,
+                    timerId: window.setTimeout(function () {
+                        _this.messages.fail(packet.messageId, new Error('TIMEOUT'));
+                    }, DEFAULT_TIMEOUT)
                 };
 
-                resolver.messageId = _this.messages.add(resolver);
-                resolver.timerId = window.setTimeout(function () {
-                    reject(new Error('TIMEOUT'));
-                }, DEFAULT_TIMEOUT);
-
-                var packet = {
+                packet = {
                     sourceId: _this.id,
                     targetId: _this.peerId,
-                    messageId: resolver.messageId,
+                    messageId: _this.messages.add(resolver),
                     message: message,
                     type: type
                 };
@@ -255,7 +255,7 @@ var Socket = function () {
     }, {
         key: 'close',
         value: function close() {
-            this.onClose && this.onClose();
+            this.onClose();
         }
 
         /**
@@ -442,11 +442,25 @@ var HeartbeatProvider = function () {
             this._sendHeartbeat();
         }
     }, {
+        key: 'stop',
+        value: function stop() {
+            window.clearTimeout(this._timerId);
+        }
+    }, {
         key: '_sendHeartbeat',
         value: function _sendHeartbeat() {
-            this._socket.send('', MESSAGE_TYPES.HEARTBEAT);
+            var _this = this;
 
-            window.setTimeout(this._sendHeartbeat.bind(this), DEFAULT_HEALTH_CHECK_INTERVAL);
+            this._socket.send('', MESSAGE_TYPES.HEARTBEAT).catch(function () {
+                return _this.onFail();
+            });
+
+            this._timerId = window.setTimeout(this._sendHeartbeat.bind(this), DEFAULT_HEALTH_CHECK_INTERVAL);
+        }
+    }, {
+        key: 'onFail',
+        value: function onFail() {
+            // Stub handler, intended to be overridden.
         }
     }]);
     return HeartbeatProvider;
@@ -475,8 +489,6 @@ var Guest = function () {
 
             this._socket = new Socket(DEFAULT_SERVER_SOCKET_ID, window.opener || window.top, parseInt(window.name, 10));
 
-            this._healthMonitor = new HeartbeatMonitor(this, [this._socket]);
-
             this._socket.onMessage = function () {
                 _this.onReceiveMessage && _this.onReceiveMessage.apply(_this, arguments);
             };
@@ -485,13 +497,15 @@ var Guest = function () {
 
             var heartbeat = new HeartbeatProvider(this._socket);
 
+            heartbeat.onFail = function () {
+                heartbeat.stop();
+                _this.close();
+            };
+
             // Setup an event to notify the client that we're ready to send messages
             window.addEventListener('load', function () {
                 heartbeat.start();
             }, false);
-
-            // ensure socket monitoring is active
-            this._healthMonitor.start();
         }
     }, {
         key: '_onMessage',
@@ -523,6 +537,7 @@ var Guest = function () {
     }, {
         key: 'close',
         value: function close() {
+            this.onClose();
             window.close();
         }
 
@@ -531,6 +546,11 @@ var Guest = function () {
          * @returns {*}
          */
 
+    }, {
+        key: 'onClose',
+        value: function onClose() {
+            // Stub handler, intended to be overridden.
+        }
     }, {
         key: 'id',
         get: function get$$1() {
