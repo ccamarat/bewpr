@@ -2,7 +2,7 @@
   "name": "bewpr",
   "title": "bewpr",
   "description": "Javascript library for messaging between web application windows.",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "author": "Chris Camaratta <chris.camaratta@hotmail.com>",
   "license": "MIT",
   "repository": {

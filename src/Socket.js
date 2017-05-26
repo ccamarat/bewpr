@@ -22,8 +22,8 @@ class MessageQueue {
         delete this._items[id];
     }
 
-    fail(id) {
-        this._items[id].reject();
+    fail(id, error) {
+        this._items[id].reject(error);
         delete this._items[id];
     }
 }
@@ -66,20 +66,20 @@ export class Socket {
         }
 
         return new Promise((resolve, reject) => {
+            // eslint-disable-next-line prefer-const
+            let packet;
             const resolver = {
                 resolve,
-                reject
+                reject,
+                timerId: window.setTimeout(() => {
+                    this.messages.fail(packet.messageId, new Error('TIMEOUT'));
+                }, DEFAULT_TIMEOUT)
             };
 
-            resolver.messageId = this.messages.add(resolver);
-            resolver.timerId = window.setTimeout(() => {
-                reject(new Error('TIMEOUT'));
-            }, DEFAULT_TIMEOUT);
-
-            const packet = {
+            packet = {
                 sourceId: this.id,
                 targetId: this.peerId,
-                messageId: resolver.messageId,
+                messageId: this.messages.add(resolver),
                 message,
                 type
             };
@@ -108,7 +108,7 @@ export class Socket {
      * Closes the socket. Also triggers the "onClose" callback if supplied.
      */
     close() {
-        this.onClose && this.onClose();
+        this.onClose();
     }
 
     /**

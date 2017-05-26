@@ -1,7 +1,6 @@
 import {Serializer} from './Serializer';
 import {Socket} from './Socket';
 import {HeartbeatProvider} from './HeartbeatProvider';
-import {HeartbeatMonitor} from './HeartbeatMonitor';
 
 const DEFAULT_SERVER_SOCKET_ID = 0;
 
@@ -17,8 +16,6 @@ export class Guest {
     start () {
         this._socket = new Socket(DEFAULT_SERVER_SOCKET_ID, window.opener || window.top, parseInt(window.name, 10));
 
-        this._healthMonitor = new HeartbeatMonitor(this, [this._socket]);
-
         this._socket.onMessage = (...args) => {
             this.onReceiveMessage && this.onReceiveMessage(...args);
         };
@@ -27,13 +24,12 @@ export class Guest {
 
         const heartbeat = new HeartbeatProvider(this._socket);
 
+        heartbeat.onFail = this.close;
+
         // Setup an event to notify the client that we're ready to send messages
         window.addEventListener('load', () => {
             heartbeat.start();
         }, false);
-
-        // ensure socket monitoring is active
-        this._healthMonitor.start();
     }
 
     _onMessage (message) {
