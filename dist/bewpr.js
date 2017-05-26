@@ -186,6 +186,9 @@ var Socket = function () {
 
         // Indicates whether the peer has started
         this.isStarted = false;
+
+        // Disable the socket when its closed.
+        this._isClosed = false;
     }
 
     /**
@@ -202,6 +205,9 @@ var Socket = function () {
 
             var type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : MESSAGE_TYPES.DATA;
 
+            if (this._isClosed) {
+                return Promise.reject(new Error('socket is closed.'));
+            }
             if (type === MESSAGE_TYPES.START) {
                 this.isStarted = true;
             }
@@ -237,6 +243,10 @@ var Socket = function () {
     }, {
         key: 'ack',
         value: function ack(messageId) {
+            if (this._isClosed) {
+                return;
+            }
+
             var packet = {
                 sourceId: this.id,
                 targetId: this.peerId,
@@ -255,7 +265,10 @@ var Socket = function () {
     }, {
         key: 'close',
         value: function close() {
-            this.onClose();
+            if (!this._isClosed) {
+                this.onClose();
+                this._isClosed = true;
+            }
         }
 
         /**
@@ -266,6 +279,10 @@ var Socket = function () {
     }, {
         key: 'handle',
         value: function handle(packet) {
+            if (this._isClosed) {
+                return;
+            }
+
             this.lastPeerCheckin = Date.now();
 
             switch (packet.type) {
