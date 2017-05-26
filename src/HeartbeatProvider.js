@@ -16,10 +16,14 @@ export class HeartbeatProvider {
         this._sendHeartbeat();
     }
 
+    stop () {
+        window.clearTimeout(this._timerId);
+    }
+
     _sendHeartbeat() {
         this._socket.send('', MESSAGE_TYPES.HEARTBEAT).catch(() => this.onFail());
 
-        window.setTimeout(this._sendHeartbeat.bind(this), DEFAULT_HEALTH_CHECK_INTERVAL);
+        this._timerId = window.setTimeout(this._sendHeartbeat.bind(this), DEFAULT_HEALTH_CHECK_INTERVAL);
     }
 
     onFail() {

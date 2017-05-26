@@ -24,7 +24,10 @@ export class Guest {
 
         const heartbeat = new HeartbeatProvider(this._socket);
 
-        heartbeat.onFail = this.close;
+        heartbeat.onFail = () => {
+            heartbeat.stop();
+            this.close();
+        };
 
         // Setup an event to notify the client that we're ready to send messages
         window.addEventListener('load', () => {
@@ -54,6 +57,7 @@ export class Guest {
      * Closes the guest window!
      */
     close () {
+        this.onClose();
         window.close();
     }
 
@@ -63,5 +67,9 @@ export class Guest {
      */
     get id () {
         return this._socket.peerId;
+    }
+
+    onClose() {
+        // Stub handler, intended to be overridden.
     }
 }
