@@ -12,3 +12,5 @@ export const MESSAGE_TYPES = {
     ACK: 'ack',
     HEARTBEAT: 'heartbeat'
 };
+
+export const isIE = window.ActiveXObject || 'ActiveXObject' in window;

@@ -13,6 +13,8 @@ var MESSAGE_TYPES = {
     HEARTBEAT: 'heartbeat'
 };
 
+var isIE = window.ActiveXObject || 'ActiveXObject' in window;
+
 var classCallCheck = function (instance, Constructor) {
   if (!(instance instanceof Constructor)) {
     throw new TypeError("Cannot call a class as a function");
@@ -36,6 +38,71 @@ var createClass = function () {
     return Constructor;
   };
 }();
+
+
+
+
+
+
+
+var get = function get(object, property, receiver) {
+  if (object === null) object = Function.prototype;
+  var desc = Object.getOwnPropertyDescriptor(object, property);
+
+  if (desc === undefined) {
+    var parent = Object.getPrototypeOf(object);
+
+    if (parent === null) {
+      return undefined;
+    } else {
+      return get(parent, property, receiver);
+    }
+  } else if ("value" in desc) {
+    return desc.value;
+  } else {
+    var getter = desc.get;
+
+    if (getter === undefined) {
+      return undefined;
+    }
+
+    return getter.call(receiver);
+  }
+};
+
+var inherits = function (subClass, superClass) {
+  if (typeof superClass !== "function" && superClass !== null) {
+    throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+  }
+
+  subClass.prototype = Object.create(superClass && superClass.prototype, {
+    constructor: {
+      value: subClass,
+      enumerable: false,
+      writable: true,
+      configurable: true
+    }
+  });
+  if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+};
+
+
+
+
+
+
+
+
+
+
+
+var possibleConstructorReturn = function (self, call) {
+  if (!self) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  }
+
+  return call && (typeof call === "object" || typeof call === "function") ? call : self;
+};
 
 var HeartbeatMonitor = function () {
     function HeartbeatMonitor(host, sockets) {
@@ -126,7 +193,7 @@ var MessageQueue = function () {
     }
 
     createClass(MessageQueue, [{
-        key: 'add',
+        key: "add",
         value: function add(resolver) {
             var id = makeId();
 
@@ -135,14 +202,14 @@ var MessageQueue = function () {
             return id;
         }
     }, {
-        key: 'acknowledge',
+        key: "acknowledge",
         value: function acknowledge(id) {
             clearTimeout(this._items[id].timerId);
             this._items[id].resolve();
             delete this._items[id];
         }
     }, {
-        key: 'fail',
+        key: "fail",
         value: function fail(id, error) {
             this._items[id].reject(error);
             delete this._items[id];
@@ -154,8 +221,6 @@ var MessageQueue = function () {
 /**
  * The socket is the primary means a client communicates with a peer server.
  */
-
-
 var Socket = function () {
 
     /**
@@ -225,7 +290,7 @@ var Socket = function () {
                     type: type
                 };
 
-                _this.target.postMessage(Serializer.serialize(packet), '*');
+                _this._send(Serializer.serialize(packet));
             });
         }
 
@@ -249,7 +314,12 @@ var Socket = function () {
                 type: MESSAGE_TYPES.ACK
             };
 
-            this.target.postMessage(Serializer.serialize(packet), '*');
+            this._send(Serializer.serialize(packet));
+        }
+    }, {
+        key: '_send',
+        value: function _send(message) {
+            this.target.postMessage(message, '*');
         }
 
         /**
@@ -334,13 +404,38 @@ var Socket = function () {
     return Socket;
 }();
 
+var HostSocket = function (_Socket) {
+    inherits(HostSocket, _Socket);
+
+    function HostSocket() {
+        classCallCheck(this, HostSocket);
+        return possibleConstructorReturn(this, (HostSocket.__proto__ || Object.getPrototypeOf(HostSocket)).apply(this, arguments));
+    }
+
+    createClass(HostSocket, [{
+        key: '_send',
+        value: function _send(message) {
+            if (isIE) {
+                this.target.toGuest(message);
+            } else {
+                get(HostSocket.prototype.__proto__ || Object.getPrototypeOf(HostSocket.prototype), '_send', this).call(this, message);
+            }
+        }
+    }]);
+    return HostSocket;
+}(Socket);
+
 var Host = function () {
     function Host() {
         classCallCheck(this, Host);
 
         this._sockets = [];
         // Listen for postMessage events
-        window.addEventListener('message', this._onMessage.bind(this), false);
+        if (isIE) {
+            window.fromGuest = this._onMessage.bind(this);
+        } else {
+            window.addEventListener('message', this._onMessage.bind(this), false);
+        }
 
         // Create the health monitor
         this._healthMonitor = new HeartbeatMonitor(this, this._sockets);
@@ -377,10 +472,16 @@ var Host = function () {
             var socketId = this._sockets.length;
 
             // The 'endpoint' is the target window
+            if (isIE) {
+                var proxy = './ie-proxy.html';
+
+                options.target = proxy + '?guest=' + options.target;
+            }
             var endpoint = window.open(options.target, socketId.toString(), options.windowOptions);
+            // const endpoint = window.open(options.target, socketId.toString(), options.windowOptions);
 
             // new up a socket and store it in our socket's array
-            var socket = new Socket(socketId, endpoint);
+            var socket = new HostSocket(socketId, endpoint);
 
             this._sockets.push(socket);
 

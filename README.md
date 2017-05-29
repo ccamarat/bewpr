@@ -75,5 +75,10 @@ host.start();
 
 ```
 
+#### IE Compatibility
+Internet Explorer [never got around to properly supporting the postMessage interface](https://stackoverflow.com/a/16313383/7237787),
+so that leaves us with an ugly hack. If you need to support IE, copy the "ie-proxy" file in test-harness/host to the
+directory of your app on your host.
+
 ### And that's about it.
 See running example in [the test harness](./test-harness/host.htm).

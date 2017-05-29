@@ -12,7 +12,7 @@
 <div id="divMsgs"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/6.23.0/polyfill.js"></script>
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
-<script src="../dist/bewpr.js"></script>
+<script src="../../dist/bewpr.js"></script>
 <script>
     (function () {
         'use strict';
@@ -34,10 +34,12 @@
             });
             $('#buttons').append(button);
         }
+
         window.createSocket = function () {
             host.create({
-                target: './guest.htm',
-                windowOptions: 'left=400,top=200,height=500,width=500,status=yes,toolbar=no,menubar=no,location=yes'
+                // target: '../guest/',
+                target: 'http://localhost:10000/test-harness/guest/',
+                windowOptions: 'left=100,top=100,height=1000,width=1600'
             }).then(function(socket) {
                 socket.onStart = function () {
                     oDiv.innerHTML += 'Socket ' + socket.id + ' is officially open.<br/>';

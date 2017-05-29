@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
+    <meta charset="UTF-8">
+    <style>
+        iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            border: 1px solid blue;
+        }
+    </style>
+</head>
+<body>
+
+<iframe id="guestFrame"></iframe>
+
+<script>
+    (function () {
+        'use strict';
+        var guestFrame = document.getElementById('guestFrame');
+
+        // -----------------------------------------------
+        // handle messages coming from the guest (to the host)
+        // -----------------------------------------------
+        function toHost(e) {
+            window.opener.fromGuest(e);
+        }
+        window.addEventListener('message', toHost, false);
+
+        // -----------------------------------------------
+        // handle messages coming from the host (to the guest)
+        // -----------------------------------------------
+        window.toGuest = function toGuest(s) {
+            guestFrame.contentWindow.postMessage(s, '*');
+        };
+
+        // -----------------------------------------------
+        // Update guestFrame source
+        // -----------------------------------------------
+        (function () {
+            var q = window.location.search;
+            guestFrame.name = window.name;
+            guestFrame.src = q.substring(q.indexOf('=') + 1);
+        }());
+    }());
+</script>
+</body>
+</html>

@@ -1,19 +1,23 @@
 import {HeartbeatMonitor} from './HeartbeatMonitor';
 import {Serializer} from './Serializer';
-import {Socket} from './Socket';
-import {DEFAULT_TIMEOUT} from './enums';
+import {HostSocket} from './HostSocket';
+import {DEFAULT_TIMEOUT, isIE} from './enums';
 
 export class Host {
-    constructor () {
+    constructor() {
         this._sockets = [];
         // Listen for postMessage events
-        window.addEventListener('message', this._onMessage.bind(this), false);
+        if (isIE) {
+            window.fromGuest = this._onMessage.bind(this);
+        } else {
+            window.addEventListener('message', this._onMessage.bind(this), false);
+        }
 
         // Create the health monitor
         this._healthMonitor = new HeartbeatMonitor(this, this._sockets);
     }
 
-    _onMessage (message) {
+    _onMessage(message) {
         const packet = Serializer.deserialize(message.data);
         const socket = this._sockets[packet.targetId];
 
@@ -34,15 +38,21 @@ export class Host {
      * @param options
      * @returns {Socket}
      */
-    create (options) {
+    create(options) {
         // the socket id is simply the next available slot in the sockets array
         const socketId = this._sockets.length;
 
         // The 'endpoint' is the target window
+        if (isIE) {
+            const proxy = './ie-proxy.html';
+
+            options.target = `${proxy}?guest=${options.target}`;
+        }
         const endpoint = window.open(options.target, socketId.toString(), options.windowOptions);
+        // const endpoint = window.open(options.target, socketId.toString(), options.windowOptions);
 
         // new up a socket and store it in our socket's array
-        const socket = new Socket(socketId, endpoint);
+        const socket = new HostSocket(socketId, endpoint);
 
         this._sockets.push(socket);
 
@@ -66,7 +76,7 @@ export class Host {
      * Close the socket, which renders it pretty much useless.
      * @param socket
      */
-    close (socket) {
+    close(socket) {
         if (socket.target) {
             socket.target.close();
         }
@@ -77,7 +87,7 @@ export class Host {
     /**
      * shuts down the host.
      */
-    shutdown () {
+    shutdown() {
         for (let ix = 0; ix < this._sockets.length; ix++) {
             this.close(this._sockets[ix]);
         }
