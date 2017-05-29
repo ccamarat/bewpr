@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Proxy Window</title>
+    <style>
+        iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            border: 1px solid blue;
+        }
+    </style>
+</head>
+<body>
+    <iframe id="frmSub" seamless></iframe>
+
+    <script>
+        var oFrame = document.getElementById("frmSub");
+
+        // *** postMessage ***
+        function logMessage(e) {
+            window.opener.postMessagePassthrough(e.data || "Source: <b>Proxy</b>. Domain: " + document.domain + ". <b>Via</b>: postMessagePassthrough", "*");
+        }
+ 
+        if (document.addEventListener) {
+            window.addEventListener("message", logMessage, false);
+        }
+        else if (window.attachEvent) {
+            window.attachEvent('onmessage', logMessage);
+        }
+
+        // *** IE Compatibility ***
+        function postMessagePassthrough(s) {
+            oFrame.contentWindow.postMessage(s || "Source: <b>Proxy</b>. Domain: " + document.domain + ". <b>Via</b>: postMessage", "*");
+        }
+
+        // *** IE8 Compatibility ***
+        function postMessagePassthroughStackbust(s) {
+            var task = 'postMessagePassthrough("' + s + ' (stackbust)")';
+            setTimeout(task, 0);
+        }
+
+        // Update iFrame source
+        (function() {
+          var q = window.location.search;
+          oFrame.src = q.substring(q.indexOf('=') + 1);
+        }());
+    </script>
+</body>
+</html>
