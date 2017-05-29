@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Proxy Window</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
+    <meta charset="UTF-8">
     <style>
         iframe {
             position: absolute;
@@ -14,39 +15,38 @@
     </style>
 </head>
 <body>
-    <iframe id="frmSub" seamless></iframe>
 
-    <script>
-        var oFrame = document.getElementById("frmSub");
+<iframe id="guestFrame"></iframe>
 
-        // *** postMessage ***
-        function logMessage(e) {
-            window.opener.postMessagePassthrough(e.data || "Source: <b>Proxy</b>. Domain: " + document.domain + ". <b>Via</b>: postMessagePassthrough", "*");
-        }
- 
-        if (document.addEventListener) {
-            window.addEventListener("message", logMessage, false);
-        }
-        else if (window.attachEvent) {
-            window.attachEvent('onmessage', logMessage);
-        }
+<script>
+    (function () {
+        'use strict';
+        var guestFrame = document.getElementById('guestFrame');
 
-        // *** IE Compatibility ***
-        function postMessagePassthrough(s) {
-            oFrame.contentWindow.postMessage(s || "Source: <b>Proxy</b>. Domain: " + document.domain + ". <b>Via</b>: postMessage", "*");
+        // -----------------------------------------------
+        // handle messages coming from the guest (to the host)
+        // -----------------------------------------------
+        function toHost(e) {
+            window.opener.fromGuest(e);
         }
+        window.addEventListener('message', toHost, false);
 
-        // *** IE8 Compatibility ***
-        function postMessagePassthroughStackbust(s) {
-            var task = 'postMessagePassthrough("' + s + ' (stackbust)")';
-            setTimeout(task, 0);
-        }
+        // -----------------------------------------------
+        // handle messages coming from the host (to the guest)
+        // -----------------------------------------------
+        window.toGuest = function toGuest(s) {
+            guestFrame.contentWindow.postMessage(s, '*');
+        };
 
-        // Update iFrame source
-        (function() {
-          var q = window.location.search;
-          oFrame.src = q.substring(q.indexOf('=') + 1);
+        // -----------------------------------------------
+        // Update guestFrame source
+        // -----------------------------------------------
+        (function () {
+            var q = window.location.search;
+            guestFrame.name = window.name;
+            guestFrame.src = q.substring(q.indexOf('=') + 1);
         }());
-    </script>
+    }());
+</script>
 </body>
 </html>

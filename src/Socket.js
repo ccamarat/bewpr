@@ -1,32 +1,6 @@
 import {Serializer} from './Serializer';
 import {MESSAGE_TYPES, DEFAULT_TIMEOUT} from './enums';
-
-const makeId = () => Date.now() + Math.random();
-
-class MessageQueue {
-    constructor() {
-        this._items = {};
-    }
-
-    add(resolver) {
-        const id = makeId();
-
-        this._items[id] = resolver;
-
-        return id;
-    }
-
-    acknowledge(id) {
-        clearTimeout(this._items[id].timerId);
-        this._items[id].resolve();
-        delete this._items[id];
-    }
-
-    fail(id, error) {
-        this._items[id].reject(error);
-        delete this._items[id];
-    }
-}
+import {MessageQueue} from './MessageQueue';
 
 /**
  * The socket is the primary means a client communicates with a peer server.
@@ -90,7 +64,7 @@ export class Socket {
                 type
             };
 
-            this.target.postMessage(Serializer.serialize(packet), '*');
+            this._send(Serializer.serialize(packet));
         });
     }
 
@@ -111,7 +85,11 @@ export class Socket {
             type: MESSAGE_TYPES.ACK
         };
 
-        this.target.postMessage(Serializer.serialize(packet), '*');
+        this._send(Serializer.serialize(packet));
+    }
+
+    _send(message) {
+        this.target.postMessage(message, '*');
     }
 
     /**
