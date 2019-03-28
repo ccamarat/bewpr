@@ -1,26 +1,38 @@
 const makeId = () => Date.now() + Math.random();
 
 export class MessageQueue {
-    constructor() {
-        this._items = {};
+  constructor () {
+    this._items = {};
+    this._handled = [];
+    this._failed = [];
+  }
+
+  add (resolver) {
+    const id = makeId();
+
+    this._items[id] = resolver;
+
+    return id;
+  }
+
+  acknowledge (id) {
+    const item = this._items[id];
+
+    if (item) {
+      clearTimeout(item.timerId);
+      item.resolve();
+      delete this._items[id];
+      this._handled.push(id);
     }
+  }
 
-    add(resolver) {
-        const id = makeId();
+  fail (id, error) {
+    const item = this._items[id];
 
-        this._items[id] = resolver;
-
-        return id;
+    if (item) {
+      item.reject(error);
+      delete this._items[id];
+      this._failed.push(id);
     }
-
-    acknowledge(id) {
-        clearTimeout(this._items[id].timerId);
-        this._items[id].resolve();
-        delete this._items[id];
-    }
-
-    fail(id, error) {
-        this._items[id].reject(error);
-        delete this._items[id];
-    }
+  }
 }
