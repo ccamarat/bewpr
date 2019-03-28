@@ -182,40 +182,52 @@ var Serializer = {
 };
 
 var makeId = function makeId() {
-    return Date.now() + Math.random();
+  return Date.now() + Math.random();
 };
 
 var MessageQueue = function () {
-    function MessageQueue() {
-        classCallCheck(this, MessageQueue);
+  function MessageQueue() {
+    classCallCheck(this, MessageQueue);
 
-        this._items = {};
+    this._items = {};
+    this._handled = [];
+    this._failed = [];
+  }
+
+  createClass(MessageQueue, [{
+    key: "add",
+    value: function add(resolver) {
+      var id = makeId();
+
+      this._items[id] = resolver;
+
+      return id;
     }
+  }, {
+    key: "acknowledge",
+    value: function acknowledge(id) {
+      var item = this._items[id];
 
-    createClass(MessageQueue, [{
-        key: "add",
-        value: function add(resolver) {
-            var id = makeId();
+      if (item) {
+        clearTimeout(item.timerId);
+        item.resolve();
+        delete this._items[id];
+        this._handled.push(id);
+      }
+    }
+  }, {
+    key: "fail",
+    value: function fail(id, error) {
+      var item = this._items[id];
 
-            this._items[id] = resolver;
-
-            return id;
-        }
-    }, {
-        key: "acknowledge",
-        value: function acknowledge(id) {
-            clearTimeout(this._items[id].timerId);
-            this._items[id].resolve();
-            delete this._items[id];
-        }
-    }, {
-        key: "fail",
-        value: function fail(id, error) {
-            this._items[id].reject(error);
-            delete this._items[id];
-        }
-    }]);
-    return MessageQueue;
+      if (item) {
+        item.reject(error);
+        delete this._items[id];
+        this._failed.push(id);
+      }
+    }
+  }]);
+  return MessageQueue;
 }();
 
 /**
