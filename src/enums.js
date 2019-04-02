@@ -7,10 +7,10 @@ export const DEFAULT_TIMEOUT = 5000;
  * @type {{DATA: string, START: string, HEARTBEAT: string}}
  */
 export const MESSAGE_TYPES = {
-    DATA: 'data',
-    START: 'start',
-    ACK: 'ack',
-    HEARTBEAT: 'heartbeat'
+  DATA: 'data',
+  START: 'start',
+  ACK: 'ack',
+  HEARTBEAT: 'heartbeat'
 };
 
 export const isIE = window.ActiveXObject || 'ActiveXObject' in window;

@@ -26,6 +26,15 @@ export class MessageQueue {
     }
   }
 
+  clear () {
+    const ids = Object.keys(this._items);
+    for (let ix = 0; ix < ids.length; ix++) {
+      const id = ids[ix];
+      clearTimeout(this._items[id].timerId);
+      delete this._items[id];
+    }
+  }
+
   fail (id, error) {
     const item = this._items[id];
 

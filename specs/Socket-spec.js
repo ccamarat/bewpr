@@ -1,113 +1,101 @@
-import {MESSAGE_TYPES, DEFAULT_TIMEOUT} from '../src/enums';
-import {Socket} from '../src/Socket';
+import { MESSAGE_TYPES } from '../src/enums';
+import { Socket } from '../src/Socket';
 
 describe('Socket', () => {
-    let mockTarget;
+  let mockTarget;
 
-    beforeEach(()=> {
-        mockTarget = {
-            postMessage: jasmine.createSpy('postMessage')
-        };
+  beforeEach(() => {
+    jest.useFakeTimers();
+
+    mockTarget = {
+      postMessage: jest.fn()
+    };
+  });
+
+  it('should send a message', () => {
+    const subject = new Socket(1, mockTarget, 2);
+
+    subject.send('this');
+
+    expect(mockTarget.postMessage).toHaveBeenCalledWith(expect.any(String), '*');
+    subject.close(); // Prevent errors when timeout from non-ack'd message is thrown
+  });
+
+  it('should call close if defined', () => {
+    const subject = new Socket(1, mockTarget, 2);
+    subject.onClose = jest.fn();
+
+    subject.close();
+
+    expect(subject.onClose).toHaveBeenCalled();
+  });
+
+  it('should call "onStart" if a start message is received', () => {
+    const subject = new Socket(1, mockTarget, 2);
+    subject.onStart = jest.fn();
+
+    subject.handle({
+      type: MESSAGE_TYPES.START
     });
 
-    it('should send a message', () => {
-        const subject = new Socket(1, mockTarget, 2);
+    expect(subject.onStart).toHaveBeenCalled();
+  });
 
-        subject.send('this');
+  it('should update lastPeerCheckin when a message is received', () => {
+    const subject = new Socket(1, mockTarget, 2);
 
-        expect(mockTarget.postMessage).toHaveBeenCalledWith(jasmine.any(String), '*');
+    subject.handle({
+      type: MESSAGE_TYPES.HEARTBEAT
     });
 
-    it('should call close if defined', () => {
-        const subject = new Socket(1, mockTarget, 2);
-        subject.onClose = jasmine.createSpy('onClose');
+    expect(subject.lastPeerCheckin).toBeNear(Date.now());
+  });
 
-        subject.close();
+  it('should call "onMessage" if any other message is received', () => {
+    const subject = new Socket(1, mockTarget, 2);
+    subject.onMessage = jest.fn();
 
-        expect(subject.onClose).toHaveBeenCalled();
+    subject.handle({});
+
+    expect(subject.onMessage).toHaveBeenCalled();
+  });
+
+  describe('timeouts', () => {
+    it('should resolve the response promise when an ack is received', () => {
+      expect.assertions(1);
+      const subject = new Socket(1, mockTarget, 2);
+      const p = subject.send('test');
+
+      // Simulate a response.
+      const messageId = Object.keys(subject.messages._items)[0];
+      subject.handle({
+        type: MESSAGE_TYPES.ACK,
+        messageId
+      });
+      // Ensure any timeouts run
+      jest.runAllTimers();
+
+      return expect(p).resolves.toEqual(undefined);
     });
 
-    it('should call "onStart" if a start message is received', () => {
-        const subject = new Socket(1, mockTarget, 2);
-        subject.onStart = jasmine.createSpy('onStart');
+    it('should reject the response promise if no ack sent within default timeout if timeout is not specified', () => {
+      expect.assertions(1);
+      const subject = new Socket(1, mockTarget, 2);
+      const p = subject.send('test');
 
-        subject.handle({
-            type: MESSAGE_TYPES.START
-        });
+      jest.advanceTimersByTime(5001);
 
-        expect(subject.onStart).toHaveBeenCalled();
+      return expect(p).rejects.toThrow('TIMEOUT');
     });
 
-    it('should update lastPeerCheckin when a message is received', () => {
-        const subject = new Socket(1, mockTarget, 2);
+    it('should reject the response promise if no ack sent within specified timeout', () => {
+      expect.assertions(1);
+      const subject = new Socket(1, mockTarget, 2, 3000);
+      const p = subject.send('test');
 
-        subject.handle({
-            type: MESSAGE_TYPES.HEARTBEAT
-        });
+      jest.advanceTimersByTime(3001);
 
-        expect(subject.lastPeerCheckin).toBeNear(Date.now());
+      return expect(p).rejects.toThrow('TIMEOUT');
     });
-
-    it('should call "onMessage" if any other message is received', () => {
-        const subject = new Socket(1, mockTarget, 2);
-        subject.onMessage = jasmine.createSpy('onMessage');
-
-        subject.handle({});
-
-        expect(subject.onMessage).toHaveBeenCalled();
-    });
-
-    describe('timeouts', () => {
-        // Note: I'd prefer to use Jasmine's clock, but doing so interferes with native promises, somehow...
-        let originalTimeout;
-        beforeEach(function() {
-            originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
-            jasmine.DEFAULT_TIMEOUT_INTERVAL = DEFAULT_TIMEOUT * 2;
-        });
-        afterEach(function() {
-            jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
-        });
-
-        it('should resolve the response promise on success', (done) => {
-            const subject = new Socket(1, mockTarget, 2);
-            const spy = jasmine.createSpy('spy');
-            subject.send('test').then(spy);
-
-            // Simulate a response.
-            const messageId = Object.keys(subject.messages._items)[0];
-            subject.handle({
-                type: MESSAGE_TYPES.ACK,
-                messageId
-            });
-
-            setTimeout(() => {
-                expect(spy).toHaveBeenCalled();
-                done();
-            }, 10);
-        });
-
-        it('should reject the response promise if no ack sent within default timeout if timeout is not specified', (done) => {
-            const subject = new Socket(1, mockTarget, 2);
-            const spy = jasmine.createSpy('spy');
-
-            subject.send('test').catch(spy);
-
-            setTimeout(() => {
-                expect(spy).toHaveBeenCalled();
-                done();
-            }, DEFAULT_TIMEOUT + 100);
-        });
-
-        it('should reject the response promise if no ack sent within specified timeout period', (done) => {
-            const subject = new Socket(1, mockTarget, 2, 3000);
-            const spy = jasmine.createSpy('spy');
-
-            subject.send('test').catch(spy);
-
-            setTimeout(() => {
-                expect(spy).toHaveBeenCalled();
-                done();
-            }, 3100);
-        });
-    });
+  });
 });
