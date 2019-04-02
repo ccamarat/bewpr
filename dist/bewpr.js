@@ -246,8 +246,10 @@ var Socket = function () {
      * @param id - this instance's id. Used to locate it when message is received.
      * @param target - the socket's communication target.
      * @param peerId - The id of the peer socket.
+     * @param timeout - Max time to wait for an ack to any message.
      */
     function Socket(id, target, peerId) {
+        var timeout = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : DEFAULT_TIMEOUT;
         classCallCheck(this, Socket);
 
         this.messages = new MessageQueue();
@@ -257,6 +259,8 @@ var Socket = function () {
         this.peerId = peerId;
 
         this.target = target;
+
+        this._timeout = timeout;
 
         // For health monitoring - indicate the last time the peer checked in telling us it's alive
         this.lastPeerCheckin = 0;
@@ -297,7 +301,7 @@ var Socket = function () {
                     reject: reject,
                     timerId: window.setTimeout(function () {
                         _this.messages.fail(packet.messageId, new Error('TIMEOUT'));
-                    }, DEFAULT_TIMEOUT)
+                    }, _this._timeout)
                 };
 
                 packet = {
@@ -443,6 +447,11 @@ var HostSocket = function (_Socket) {
     return HostSocket;
 }(Socket);
 
+var DEFAULT_GUEST_OPTIONS = {
+    windowOptions: 'left=0,top=0,height=900,width=800,status=yes,toolbar=no,menubar=no,location=yes',
+    timeout: DEFAULT_TIMEOUT
+};
+
 var Host = function () {
     function Host() {
         classCallCheck(this, Host);
@@ -485,7 +494,17 @@ var Host = function () {
 
     }, {
         key: 'create',
-        value: function create(options) {
+        value: function create() {
+            var _this = this;
+
+            var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : DEFAULT_GUEST_OPTIONS,
+                target = _ref.target,
+                _ref$windowOptions = _ref.windowOptions,
+                windowOptions = _ref$windowOptions === undefined ? DEFAULT_GUEST_OPTIONS.windowOptions : _ref$windowOptions,
+                _ref$timeout = _ref.timeout,
+                timeout = _ref$timeout === undefined ? DEFAULT_GUEST_OPTIONS.timeout : _ref$timeout;
+
+            var pTarget = target;
             // the socket id is simply the next available slot in the sockets array
             var socketId = this._sockets.length;
 
@@ -493,10 +512,9 @@ var Host = function () {
             if (isIE) {
                 var proxy = './ie-proxy.html';
 
-                options.target = proxy + '?guest=' + options.target;
+                pTarget = proxy + '?guest=' + pTarget;
             }
-            var endpoint = window.open(options.target, socketId.toString(), options.windowOptions);
-            // const endpoint = window.open(options.target, socketId.toString(), options.windowOptions);
+            var endpoint = window.open(pTarget, socketId.toString(), windowOptions);
 
             // new up a socket and store it in our socket's array
             var socket = new HostSocket(socketId, endpoint);
@@ -508,9 +526,9 @@ var Host = function () {
 
             return new Promise(function (resolve, reject) {
                 var timerId = setTimeout(function () {
-                    socket.close();
+                    _this.close(socket);
                     reject(new Error('TIMEOUT'));
-                }, DEFAULT_TIMEOUT);
+                }, timeout);
 
                 socket.onStart = function () {
                     clearTimeout(timerId);
