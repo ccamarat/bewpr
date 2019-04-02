@@ -1,4 +1,4 @@
 export const Serializer = {
-    serialize: JSON.stringify,
-    deserialize: JSON.parse
+  serialize: JSON.stringify,
+  deserialize: JSON.parse
 };
