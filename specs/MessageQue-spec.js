@@ -5,8 +5,8 @@ describe('MessageQueue', () => {
     const queue = new MessageQueue();
     const resolver = {
       timerId: 10,
-      resolve: jasmine.createSpy('resolve'),
-      reject: jasmine.createSpy('reject')
+      resolve: jest.fn(),
+      reject: jest.fn()
     };
     const id = queue.add(resolver);
 
@@ -19,8 +19,8 @@ describe('MessageQueue', () => {
     const queue = new MessageQueue();
     const resolver = {
       timerId: 10,
-      resolve: jasmine.createSpy('resolve'),
-      reject: jasmine.createSpy('reject')
+      resolve: jest.fn(),
+      reject: jest.fn()
     };
     const id = queue.add(resolver);
 
