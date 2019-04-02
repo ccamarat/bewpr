@@ -58,7 +58,7 @@ describe('Socket', () => {
     });
 
     describe('timeouts', () => {
-        // Note: I'd prefer to use Jasmine's clock, but doing so interfers with native promises, somehow...
+        // Note: I'd prefer to use Jasmine's clock, but doing so interferes with native promises, somehow...
         let originalTimeout;
         beforeEach(function() {
             originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
@@ -86,9 +86,10 @@ describe('Socket', () => {
             }, 10);
         });
 
-        it('should reject the response promise on success', (done) => {
+        it('should reject the response promise if no ack sent within default timeout if timeout is not specified', (done) => {
             const subject = new Socket(1, mockTarget, 2);
             const spy = jasmine.createSpy('spy');
+
             subject.send('test').catch(spy);
 
             setTimeout(() => {
@@ -97,5 +98,16 @@ describe('Socket', () => {
             }, DEFAULT_TIMEOUT + 100);
         });
 
+        it('should reject the response promise if no ack sent within specified timeout period', (done) => {
+            const subject = new Socket(1, mockTarget, 2, 3000);
+            const spy = jasmine.createSpy('spy');
+
+            subject.send('test').catch(spy);
+
+            setTimeout(() => {
+                expect(spy).toHaveBeenCalled();
+                done();
+            }, 3100);
+        });
     });
 });

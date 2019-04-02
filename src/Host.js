@@ -3,6 +3,11 @@ import {Serializer} from './Serializer';
 import {HostSocket} from './HostSocket';
 import {DEFAULT_TIMEOUT, isIE} from './enums';
 
+const DEFAULT_GUEST_OPTIONS = {
+    windowOptions: 'left=0,top=0,height=900,width=800,status=yes,toolbar=no,menubar=no,location=yes',
+    timeout: DEFAULT_TIMEOUT
+};
+
 export class Host {
     constructor() {
         this._sockets = [];
@@ -38,7 +43,10 @@ export class Host {
      * @param options
      * @returns {Socket}
      */
-    create(options) {
+    create (
+      {target, windowOptions = DEFAULT_GUEST_OPTIONS.windowOptions, timeout = DEFAULT_GUEST_OPTIONS.timeout}
+      = DEFAULT_GUEST_OPTIONS) {
+        let pTarget = target;
         // the socket id is simply the next available slot in the sockets array
         const socketId = this._sockets.length;
 
@@ -46,10 +54,9 @@ export class Host {
         if (isIE) {
             const proxy = './ie-proxy.html';
 
-            options.target = `${proxy}?guest=${options.target}`;
+            pTarget = `${proxy}?guest=${pTarget}`;
         }
-        const endpoint = window.open(options.target, socketId.toString(), options.windowOptions);
-        // const endpoint = window.open(options.target, socketId.toString(), options.windowOptions);
+        const endpoint = window.open(pTarget, socketId.toString(), windowOptions);
 
         // new up a socket and store it in our socket's array
         const socket = new HostSocket(socketId, endpoint);
@@ -61,9 +68,9 @@ export class Host {
 
         return new Promise((resolve, reject) => {
             const timerId = setTimeout(() => {
-                socket.close();
+                this.close(socket);
                 reject(new Error('TIMEOUT'));
-            }, DEFAULT_TIMEOUT);
+            }, timeout);
 
             socket.onStart = () => {
                 clearTimeout(timerId);

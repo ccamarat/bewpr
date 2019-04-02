@@ -12,8 +12,9 @@ export class Socket {
      * @param id - this instance's id. Used to locate it when message is received.
      * @param target - the socket's communication target.
      * @param peerId - The id of the peer socket.
+     * @param timeout - Max time to wait for an ack to any message.
      */
-    constructor(id, target, peerId) {
+    constructor(id, target, peerId, timeout = DEFAULT_TIMEOUT) {
         this.messages = new MessageQueue();
 
         this.id = id;
@@ -21,6 +22,8 @@ export class Socket {
         this.peerId = peerId;
 
         this.target = target;
+
+        this._timeout = timeout;
 
         // For health monitoring - indicate the last time the peer checked in telling us it's alive
         this.lastPeerCheckin = 0;
@@ -53,7 +56,7 @@ export class Socket {
                 reject,
                 timerId: window.setTimeout(() => {
                     this.messages.fail(packet.messageId, new Error('TIMEOUT'));
-                }, DEFAULT_TIMEOUT)
+                }, this._timeout)
             };
 
             packet = {

@@ -50,12 +50,16 @@ const log = document.getElementById('some-div');
 // Create a host.
 const host = new Host();
 
-// Create a socket. This will open a new window.
+// Create a guest connection. This will open a new window.
 const socket = host.create({
-    // URL containing a guest instance.
+    // URL containing a guest environment
     target: './guest.htm',
-    // this is passed directly to window.open() and so the API is the same.
-    windowOptions: 'left=0,top=0,height=900,width=800,status=yes,toolbar=no,menubar=no,location=yes'
+    // optional window settings. This is passed directly to window.open() and so the API is the same.
+    // Defaults to below if not supplied
+    windowOptions: 'left=0,top=0,height=900,width=800,status=yes,toolbar=no,menubar=no,location=yes',
+    // optional timeout. If the guest doesn't respond within the timeout the session is ended and a
+    // timeout error is thrown. Defaults to 5000.
+    timeout: 60000
 });
 
 // Configure the socket's onStart handler.
