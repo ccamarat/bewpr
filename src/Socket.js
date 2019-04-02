@@ -99,6 +99,7 @@ export class Socket {
      */
   close () {
     if (!this._isClosed) {
+      this.messages.clear();
       this.onClose();
       this._isClosed = true;
     }

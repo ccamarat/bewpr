@@ -224,6 +224,17 @@ function () {
       }
     }
   }, {
+    key: "clear",
+    value: function clear() {
+      var ids = Object.keys(this._items);
+
+      for (var ix = 0; ix < ids.length; ix++) {
+        var id = ids[ix];
+        clearTimeout(this._items[id].timerId);
+        delete this._items[id];
+      }
+    }
+  }, {
     key: "fail",
     value: function fail(id, error) {
       var item = this._items[id];
@@ -349,6 +360,7 @@ function () {
     key: "close",
     value: function close() {
       if (!this._isClosed) {
+        this.messages.clear();
         this.onClose();
         this._isClosed = true;
       }

@@ -1,12 +1,12 @@
 import { MESSAGE_TYPES } from '../src/enums';
 import { Socket } from '../src/Socket';
 
-jest.useFakeTimers();
-
 describe('Socket', () => {
   let mockTarget;
 
   beforeEach(() => {
+    jest.useFakeTimers();
+
     mockTarget = {
       postMessage: jest.fn()
     };
@@ -18,6 +18,7 @@ describe('Socket', () => {
     subject.send('this');
 
     expect(mockTarget.postMessage).toHaveBeenCalledWith(expect.any(String), '*');
+    subject.close(); // Prevent errors when timeout from non-ack'd message is thrown
   });
 
   it('should call close if defined', () => {
@@ -60,17 +61,6 @@ describe('Socket', () => {
   });
 
   describe('timeouts', () => {
-    /*
-    // Note: I'd prefer to use Jasmine's clock, but doing so interferes with native promises, somehow...
-    beforeEach(function () {
-      jest.setTimeout(undefined);
-      jest.setTimeout(undefined);
-    });
-    afterEach(function () {
-      jest.setTimeout(undefined);
-    });
-    */
-
     it('should resolve the response promise when an ack is received', () => {
       expect.assertions(1);
       const subject = new Socket(1, mockTarget, 2);
