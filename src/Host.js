@@ -59,7 +59,7 @@ export class Host {
     const endpoint = window.open(pTarget, socketId.toString(), windowOptions);
 
     // new up a socket and store it in our socket's array
-    const socket = new HostSocket(socketId, endpoint);
+    const socket = new HostSocket(socketId, endpoint, undefined, timeout);
 
     this._sockets.push(socket);
 

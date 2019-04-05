@@ -530,7 +530,7 @@
 
         var endpoint = window.open(pTarget, socketId.toString(), windowOptions); // new up a socket and store it in our socket's array
 
-        var socket = new HostSocket(socketId, endpoint);
+        var socket = new HostSocket(socketId, endpoint, undefined, timeout);
 
         this._sockets.push(socket); // ensure socket monitoring is active (it stops polling when all sockets are closed)
 
