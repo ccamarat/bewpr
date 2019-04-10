@@ -22,7 +22,7 @@ export class Socket {
 
     this.target = target;
 
-    this._timeout = timeout;
+    this.timeout = timeout;
 
     // For health monitoring - indicate the last time the peer checked in telling us it's alive
     this.lastPeerCheckin = 0;
@@ -55,7 +55,7 @@ export class Socket {
         reject,
         timerId: window.setTimeout(() => {
           this.messages.fail(packet.messageId, new Error('TIMEOUT'));
-        }, this._timeout)
+        }, this.timeout)
       };
 
       packet = {

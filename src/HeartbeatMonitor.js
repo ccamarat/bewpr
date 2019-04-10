@@ -1,4 +1,4 @@
-import { DEFAULT_HEALTH_CHECK_INTERVAL, DEFAULT_HEALTH_CHECK_TIMEOUT } from './enums';
+import { DEFAULT_HEALTH_CHECK_INTERVAL } from './enums';
 
 export class HeartbeatMonitor {
   constructor (host, sockets) {
@@ -31,7 +31,7 @@ export class HeartbeatMonitor {
       hasActiveSockets = true;
 
       // Close any sockets who'se peers have disappeared into the ether.
-      if (socket.isStarted && this._lasthealthPoll - socket.lastPeerCheckin > DEFAULT_HEALTH_CHECK_TIMEOUT) {
+      if (socket.isStarted && this._lasthealthPoll - socket.lastPeerCheckin > socket.timeout) {
         this._host.close(socket);
       }
     });
