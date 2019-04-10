@@ -104,7 +104,6 @@
   }
 
   var DEFAULT_HEALTH_CHECK_INTERVAL = 1000;
-  var DEFAULT_HEALTH_CHECK_TIMEOUT = 5000;
   var DEFAULT_TIMEOUT = 5000;
   /**
    * Possible message types sent/recv'd by a socket
@@ -158,7 +157,7 @@
 
           hasActiveSockets = true; // Close any sockets who'se peers have disappeared into the ether.
 
-          if (socket.isStarted && _this._lasthealthPoll - socket.lastPeerCheckin > DEFAULT_HEALTH_CHECK_TIMEOUT) {
+          if (socket.isStarted && _this._lasthealthPoll - socket.lastPeerCheckin > socket.timeout) {
             _this._host.close(socket);
           }
         }); // Update
@@ -280,7 +279,7 @@
       this.id = id;
       this.peerId = peerId;
       this.target = target;
-      this._timeout = timeout; // For health monitoring - indicate the last time the peer checked in telling us it's alive
+      this.timeout = timeout; // For health monitoring - indicate the last time the peer checked in telling us it's alive
 
       this.lastPeerCheckin = 0; // Indicates whether the peer has started
 
@@ -318,7 +317,7 @@
             reject: reject,
             timerId: window.setTimeout(function () {
               _this.messages.fail(packet.messageId, new Error('TIMEOUT'));
-            }, _this._timeout)
+            }, _this.timeout)
           };
           packet = {
             sourceId: _this.id,
